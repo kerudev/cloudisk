@@ -1,0 +1,8 @@
+# .vscode
+.vscode/
+
+# virtual envs
+.venv/
+.env/
+venv/
+env/
