@@ -1,10 +1,12 @@
+import logging
 import os
 import shutil
-import logging
 from pathlib import Path
+from typing import Literal
 
 CLOUDISK_DIR = ".cloudisk"
 LOGGER = logging.getLogger("cloudisk.logger")
+
 
 def ask_remove(storage_path: Path) -> bool:
     while (
@@ -17,8 +19,9 @@ def ask_remove(storage_path: Path) -> bool:
     return remove == "y"
 
 
-def remove_file(storage_path: Path):
+def remove_file(storage_path: Path) -> Literal[True]:
     storage_path.unlink()
+    return True
 
 
 def remove_dir(storage_path: Path) -> bool:
@@ -51,8 +54,7 @@ def handle_storage_path_exists(storage_path: Path) -> bool:
         return False
 
     if storage_path.is_file():
-        remove_file(storage_path)
-        return True
+        return remove_file(storage_path)
 
     if storage_path.is_dir():
         return remove_dir(storage_path)
@@ -62,7 +64,8 @@ def handle_storage_path_exists(storage_path: Path) -> bool:
         "Please, remove it first."
     )
 
-def init_file_structure():
+
+def init_file_structure() -> bool:
     home_dir = Path.home()
     storage_path = home_dir / CLOUDISK_DIR
 
@@ -72,3 +75,5 @@ def init_file_structure():
             return False
 
     storage_path.mkdir()
+
+    return True
