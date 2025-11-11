@@ -1,8 +1,10 @@
 from . import fs
-from .fs import CLOUDISK_DIR, init_file_structure
+from .fs import CLOUDISK_ROOT, init_file_structure, link_path, unlink_path
 
 __all__ = [
     "fs",
-    "CLOUDISK_DIR",
+    "CLOUDISK_ROOT",
     "init_file_structure",
+    "link_path",
+    "unlink_path",
 ]
