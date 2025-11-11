@@ -1,7 +1,5 @@
-import logging
-from cloudisk import args, fs
+from cloudisk import logger, args, fs
 
-LOGGER = logging.getLogger("cloudisk.logger")
 
 def main():
     arguments = args.parse()
@@ -11,7 +9,7 @@ def main():
             fs.init_file_structure()
 
         case _:
-            LOGGER.error(f"There is no command associated to {arguments.command}")
+            logger.error(f"There is no command associated to {arguments.command}")
 
 
 if __name__ == "__main__":
