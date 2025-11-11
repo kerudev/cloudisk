@@ -1,4 +1,4 @@
-from cloudisk import logger, args, fs
+from cloudisk import logger, args, fs, server
 
 
 def main():
@@ -7,6 +7,9 @@ def main():
     match arguments.command:
         case args.Command.INIT.value:
             fs.init_file_structure()
+
+        case args.Command.RUN.value:
+            server.run_server()
 
         case _:
             logger.error(f"There is no command associated to {arguments.command}")
