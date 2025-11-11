@@ -1,11 +1,11 @@
-import logging
 import os
 import shutil
 from pathlib import Path
 from typing import Literal
 
+from . import logger
+
 CLOUDISK_DIR = ".cloudisk"
-LOGGER = logging.getLogger("cloudisk.logger")
 
 
 def ask_remove(storage_path: Path) -> bool:
@@ -14,7 +14,7 @@ def ask_remove(storage_path: Path) -> bool:
             f"{storage_path} already exists. Do you want to remove it? (y/n)\n> "
         )
     ) not in ("y", "n"):
-        LOGGER.error(f"Unexpected answer. Expected 'y' or 'n', got {remove}")
+        logger.error(f"Unexpected answer. Expected 'y' or 'n', got {remove}")
 
     return remove == "y"
 
@@ -44,7 +44,7 @@ def ask_empty_dir(storage_path: Path) -> bool:
             f"Dir {storage_path} is not empty. Do you want to remove all of its content? (y/n)\n"
         )
     ) not in ("y", "n"):
-        LOGGER.error(f"Unexpected answer. Expected 'y' or 'n', got {empty_dir}")
+        logger.error(f"Unexpected answer. Expected 'y' or 'n', got {empty_dir}")
 
     return empty_dir == "y"
 
