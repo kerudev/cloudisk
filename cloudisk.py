@@ -8,6 +8,12 @@ def main():
         case args.Command.INIT.value:
             fs.init_file_structure(arguments.path)
 
+        case args.Command.LINK.value:
+            fs.link_path(arguments.path)
+
+        case args.Command.UNLINK.value:
+            fs.unlink_path(arguments.path)
+
         case args.Command.RUN.value:
             server.run_server()
 
