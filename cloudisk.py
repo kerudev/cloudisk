@@ -6,7 +6,7 @@ def main():
 
     match arguments.command:
         case args.Command.INIT.value:
-            fs.init_file_structure()
+            fs.init_file_structure(arguments.path)
 
         case args.Command.RUN.value:
             server.run_server()
