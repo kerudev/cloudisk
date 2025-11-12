@@ -1,11 +1,13 @@
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Concatenate, TypeVar
 
 from cloudisk import logger
 
+BoolFunc = Callable[Concatenate[Path, ...], bool]
 
-def ask_remove_file(func: Callable):
-    def wrapper(path: Path, *args, **kwargs):
+
+def ask_remove_file(func: BoolFunc):
+    def wrapper(path: Path, *args, **kwargs) -> bool:
         msg = f"{path} already exists. Do you want to remove it? (y/n)\n> "
 
         while (remove := input(msg)) not in ("y", "n"):
@@ -13,12 +15,14 @@ def ask_remove_file(func: Callable):
 
         if remove == "y":
             return func(path, *args, **kwargs)
+        
+        return False
 
     return wrapper
 
 
-def ask_empty_dir(func: Callable) -> bool:
-    def wrapper(path: Path, *args, **kwargs):
+def ask_empty_dir(func: BoolFunc):
+    def wrapper(path: Path, *args, **kwargs) -> bool:
         msg = f"{path} is not empty. Do you want to remove all of its content? (y/n)\n> "
 
         while (remove := input(msg)) not in ("y", "n"):
@@ -26,5 +30,7 @@ def ask_empty_dir(func: Callable) -> bool:
 
         if remove == "y":
             return func(path, *args, **kwargs)
+        
+        return False
 
     return wrapper

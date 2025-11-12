@@ -13,7 +13,7 @@ def remove_file(path: Path) -> Literal[True]:
 
 
 @ask_empty_dir
-def remove_dir(path: Path) -> bool:
+def remove_dir(path: Path) -> Literal[True]:
     # If dir is empty
     if not os.listdir(path):
         path.rmdir()
@@ -24,7 +24,7 @@ def remove_dir(path: Path) -> bool:
     return True
 
 
-def check_path_type(path: Path) -> bool:
+def remove_path(path: Path) -> bool:
     if path.is_file():
         return remove_file(path)
 
