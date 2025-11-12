@@ -1,5 +1,6 @@
-from .config import get_server_config
 from uvicorn import Server
+
+from .config import get_server_config
 
 
 def run_server():

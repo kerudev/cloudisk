@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Callable, Concatenate, TypeVar
+from typing import Callable, Concatenate
 
 from cloudisk import logger
 
@@ -15,7 +15,7 @@ def ask_remove_file(func: BoolFunc):
 
         if remove == "y":
             return func(path, *args, **kwargs)
-        
+
         return False
 
     return wrapper
@@ -30,7 +30,7 @@ def ask_empty_dir(func: BoolFunc):
 
         if remove == "y":
             return func(path, *args, **kwargs)
-        
+
         return False
 
     return wrapper
