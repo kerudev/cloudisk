@@ -1,4 +1,4 @@
-from cloudisk import logger, args, fs, server
+from cloudisk import args, fs, logger, server
 
 
 def main():
