@@ -1,12 +1,18 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
-from ..logger import get_logger
-from . import API_CONFIG
-from .routes import files_router
-from ..config import config
 from ..fs import CLOUDISK_STATIC
-from . import get_logger
+from ..logger import get_logger
+from .routes import files_router, root_router
+
+API_CONFIG = {
+    "title": "cloudisk_api",
+    "description": "API to manage cloudisk files",
+    "version": "0.1.0",
+    "openapi_tags": [
+        {"name": "files", "description": "Operations related to files management."}
+    ],
+}
 
 # Global API logger
 logger = get_logger("cloudisk.api")
@@ -15,7 +21,10 @@ logger = get_logger("cloudisk.api")
 app = FastAPI(**API_CONFIG)
 
 # Include routers in app
+app.include_router(root_router)
 app.include_router(files_router)
+
+app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="static")
 
 
 # Manage exceptions, to return a JSON
