@@ -9,9 +9,9 @@ from fastapi.responses import FileResponse, JSONResponse
 from ...fs import CLOUDISK_ROOT, is_subpath
 from ...logger import get_logger
 
-files_router = APIRouter(prefix="/files", tags=["files"])
-
 logger = get_logger("cloudisk.api.files")
+
+files_router = APIRouter(prefix="/files", tags=["files"])
 
 
 @files_router.get(
@@ -35,10 +35,13 @@ async def get_files(
     storage_path = CLOUDISK_ROOT
     if path:
         storage_path = storage_path / path
+
+        if storage_path.is_file():
+            return FileResponse(storage_path)
+
         if not is_subpath(CLOUDISK_ROOT, storage_path):
-            raise HTTPException(
-                403, f"You don't have permissions to access to {storage_path.as_posix()}"
-            )
+            files = os.listdir(storage_path)
+            return JSONResponse({"files": files})
 
     storage_path_posix = storage_path.as_posix()
 
