@@ -2,25 +2,24 @@ import os
 from pathlib import Path
 
 from cloudisk import logger
+from cloudisk.static.static import CLOUDISK_DIR_PATH
 
 from .utils import remove_path
-
-CLOUDISK_DIR = ".cloudisk"
-CLOUDISK_ROOT = (Path.home() / CLOUDISK_DIR).resolve()
-CLOUDISK_STATIC = Path("./cloudisk/static")
 
 
 def init_file_structure(path: Path) -> bool:
     # Handle it asking for user consent
     if path.exists() and not remove_path(path):
+        logger.error(f"Failed initializing folder {path}")
         return False
 
     path.mkdir()
+    logger.info(f"Initialialized folder {path} successfully")
 
     return True
 
 
-def link_path(src: Path, dst: Path = CLOUDISK_ROOT):
+def link_path(src: Path, dst: Path = CLOUDISK_DIR_PATH):
     if not src.exists():
         logger.error(f"'{src}' doesn't exist")
 
