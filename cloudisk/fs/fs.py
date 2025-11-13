@@ -7,6 +7,7 @@ from .utils import remove_path
 
 CLOUDISK_DIR = ".cloudisk"
 CLOUDISK_ROOT = (Path.home() / CLOUDISK_DIR).resolve()
+CLOUDISK_STATIC = "./cloudisk/static"
 
 
 def init_file_structure(path: Path) -> bool:

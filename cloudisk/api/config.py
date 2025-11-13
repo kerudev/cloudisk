@@ -1,8 +1,12 @@
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.staticfiles import StaticFiles
 
 from ..logger import get_logger
 from . import API_CONFIG
 from .routes import files_router
+from ..config import config
+from ..fs import CLOUDISK_STATIC
+from . import get_logger
 
 # Global API logger
 logger = get_logger("cloudisk.api")
