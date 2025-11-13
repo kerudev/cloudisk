@@ -1,5 +1,5 @@
-from . import api
+from .files import files_router
 
 __all__ = [
-    "api",
+    "files_router",
 ]

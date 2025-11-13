@@ -1,0 +1,8 @@
+name = "cloudisk_api"
+description = "API to manage cloudisk files"
+version = "0.1.0"
+
+[[TAGS]]
+
+name = "files"
+description = "Operations related to files management."

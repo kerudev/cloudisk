@@ -6,7 +6,7 @@ from cloudisk import logger
 from .utils import remove_path
 
 CLOUDISK_DIR = ".cloudisk"
-CLOUDISK_ROOT = Path.home() / CLOUDISK_DIR
+CLOUDISK_ROOT = (Path.home() / CLOUDISK_DIR).resolve()
 
 
 def init_file_structure(path: Path) -> bool:
