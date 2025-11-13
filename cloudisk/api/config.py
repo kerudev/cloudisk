@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
 from ..fs import CLOUDISK_STATIC
-from ..logger import get_logger
+from . import get_logger
 from .routes import files_router, root_router
 
 API_CONFIG = {

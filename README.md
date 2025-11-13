@@ -1,4 +1,6 @@
 # cloudisk
+Uncentralized content distribution system, on your own cloud
+
 
 ## Dependencies
 
@@ -16,6 +18,7 @@ Dev libraries:
 - pytest >= 8.4.2
 - pytest-cov >= 7.0.0
 - ruff >= 0.14.3
+
 
 ## Install dependencies
 
@@ -37,4 +40,16 @@ To install the `pre-commit` hook:
 
 ```sh
 pre-commit install
+```
+
+
+## How to run modeules without import problems
+
+```sh
+py -m cloudisk.{folder}.{folder2}.{...}
+```
+
+> E.g.
+```sh
+py -m cloudisk.src.config
 ```
