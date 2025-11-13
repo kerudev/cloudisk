@@ -1,36 +1,16 @@
-from pathlib import Path
-from tomllib import load
-
 from fastapi import FastAPI, HTTPException, Request
 
-from . import get_logger
+from ..logger import get_logger
+from . import API_CONFIG
 from .routes import files_router
 
-CONFIG_FILE = Path(__file__).parent / "config.toml"
-
-
-def get_config() -> dict:
-    if not CONFIG_FILE.exists():
-        return {}
-
-    with open(CONFIG_FILE, "rb") as f:
-        return load(f)
-
-
-api_config = get_config()
-
-
+# Global API logger
 logger = get_logger("cloudisk.api")
 
+# Initialize app
+app = FastAPI(**API_CONFIG)
 
-app = FastAPI(
-    title=api_config.get("name", "cloudisk_api"),
-    description=api_config.get("description", "API to manage cloudisk files"),
-    version=api_config.get("version", "0.1.0"),
-    openapi_tags=api_config.get("TAGS", []),
-)
-
-
+# Include routers in app
 app.include_router(files_router)
 
 
