@@ -6,6 +6,11 @@ from typing import Literal
 from .decorators import ask_empty_dir, ask_remove_file
 
 
+def is_subpath(parent_path: Path, child_path: Path) -> bool:
+    """Check if child path is subpath ot parent_path."""
+    return parent_path.resolve() in child_path.resolve().parents
+
+
 @ask_remove_file
 def remove_file(path: Path) -> Literal[True]:
     path.unlink()

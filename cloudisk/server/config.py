@@ -1,6 +1,6 @@
 from uvicorn import Config
 
-from ..api import app
+from ..api.config import app
 
 
 def get_server_config():

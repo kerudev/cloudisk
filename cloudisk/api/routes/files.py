@@ -6,7 +6,8 @@ from fastapi import APIRouter, Query, Request
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
-from .. import CLOUDISK_ROOT, get_logger, is_subpath
+from ...fs import CLOUDISK_ROOT, is_subpath
+from ...logger import get_logger
 
 files_router = APIRouter(prefix="/files", tags=["files"])
 
@@ -16,11 +17,11 @@ logger = get_logger("cloudisk.api.files")
 @files_router.get(
     "",
     responses={
-        200: {"description": "Listed files or specific file"},
-        400: {"description": "Path is not a directory or a file"},
-        404: {"description": "Path does not exist"},
-        418: {"description": "User tried to retrieve files from a non permitted path"},
-        500: {"description": "Internal server error"},
+        200: {"description": "List of files or specific file."},
+        400: {"description": "Path is not a directory or a file."},
+        403: {"description": "User tried to retrieve files from a non permitted path."},
+        404: {"description": "Path does not exist."},
+        500: {"description": "Internal server error."},
     },
 )
 async def get_files(
@@ -36,7 +37,7 @@ async def get_files(
         storage_path = storage_path / path
         if not is_subpath(CLOUDISK_ROOT, storage_path):
             raise HTTPException(
-                418, f"You don't have permissions to access to {storage_path.as_posix()}"
+                403, f"You don't have permissions to access to {storage_path.as_posix()}"
             )
 
     storage_path_posix = storage_path.as_posix()
