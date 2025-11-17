@@ -7,18 +7,13 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from cloudisk.fs.utils import get_mime_type, is_subpath
-from cloudisk.fs.vars import CLOUDISK_ROOT
-from cloudisk.infra.logger import get_logger
+from cloudisk.logger import logger
+from cloudisk.vars import CLOUDISK_ROOT
 
-files_router = APIRouter(prefix="/files", tags=["files"])
-
-
-logger = get_logger("cloudisk.api.files")
-
-files_router = APIRouter(prefix="/files", tags=["files"])
+files = APIRouter(prefix="/files", tags=["files"])
 
 
-@files_router.get(
+@files.get(
     "",
     responses={
         200: {"description": "List of files or specific file."},
@@ -62,7 +57,6 @@ async def get_files(
             files = os.listdir(storage_path)
             return JSONResponse({"files": files})
 
-        content_type = None
         try:
             content_type = get_mime_type(storage_path)
         except Exception as e:

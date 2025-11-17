@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Callable, Concatenate
 
-from cloudisk.infra.logger import get_logger
+from cloudisk.logger import get_logger
 
 BoolFunc = Callable[Concatenate[Path, ...], bool]
 

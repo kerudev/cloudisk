@@ -2,8 +2,8 @@ import os
 from pathlib import Path
 
 from cloudisk.fs.utils import remove_path
-from cloudisk.fs.vars import CLOUDISK_ROOT
-from cloudisk.infra.logger import get_logger
+from cloudisk.logger import get_logger
+from cloudisk.vars import CLOUDISK_ROOT
 
 logger = get_logger("cloudisk.fs")
 

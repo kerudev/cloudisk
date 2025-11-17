@@ -1,10 +1,9 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
-from cloudisk.fs.vars import CLOUDISK_STATIC
-
-from . import get_logger
-from .routes import files_router, root_router
+from cloudisk.http.routers import files, root
+from cloudisk.logger import get_logger
+from cloudisk.vars import CLOUDISK_STATIC
 
 API_CONFIG = {
     "title": "cloudisk_api",
@@ -22,8 +21,8 @@ logger = get_logger("cloudisk.api")
 app = FastAPI(**API_CONFIG)
 
 # Include routers in app
-app.include_router(root_router)
-app.include_router(files_router)
+app.include_router(root)
+app.include_router(files)
 
 app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="static")
 

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from cloudisk import fs
-from cloudisk.fs.vars import METADATA_FILE
+from cloudisk.vars import METADATA_FILE
 
 _ENCODING = "utf-8"
 _ENSURE_ASCII = False

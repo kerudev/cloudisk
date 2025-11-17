@@ -1,5 +1,1 @@
-from cloudisk.infra.logger import logger
-
-__all__ = [
-    "logger",
-]
+from cloudisk.cli import main as main
