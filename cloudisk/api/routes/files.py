@@ -6,9 +6,12 @@ from fastapi import APIRouter, Query, Request
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
-from cloudisk.fs.utils import is_subpath
+from cloudisk.fs.utils import get_mime_type, is_subpath
 from cloudisk.fs.vars import CLOUDISK_ROOT
 from cloudisk.infra.logger import get_logger
+
+files_router = APIRouter(prefix="/files", tags=["files"])
+
 
 logger = get_logger("cloudisk.api.files")
 
@@ -59,7 +62,17 @@ async def get_files(
             files = os.listdir(storage_path)
             return JSONResponse({"files": files})
 
-        return FileResponse(storage_path)
+        content_type = None
+        try:
+            content_type = get_mime_type(storage_path)
+        except Exception as e:
+            logger.warning(f"Could not get mime type for file {storage_path}: {e}")
+
+        if content_type is None:
+            # Let Starlette infer file content type
+            return FileResponse(storage_path)
+
+        return FileResponse(storage_path, media_type=content_type)
 
     except Exception as e:
         raise HTTPException(

@@ -3,7 +3,17 @@ import shutil
 from pathlib import Path
 from typing import Literal
 
+from filetype import guess_mime
+
 from .decorators import ask_empty_dir, ask_remove_file
+
+
+def get_mime_type(path: Path) -> str | None:
+    """Get mime type of the given file."""
+    if not path.is_file():
+        return None
+
+    return guess_mime(path)
 
 
 def is_subpath(parent_path: Path, child_path: Path) -> bool:
