@@ -2,7 +2,7 @@ import argparse
 from enum import StrEnum, auto
 from pathlib import Path
 
-from fs import CLOUDISK_ROOT
+from cloudisk.fs.vars import CLOUDISK_ROOT
 
 PATH_FLAGS = ("-p", "--path")
 
