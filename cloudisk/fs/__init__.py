@@ -1,13 +1,12 @@
 from . import fs
 from .fs import init_file_structure, link_path, unlink_path
-from cloudisk.static.static import CLOUDISK_DIR_PATH
+from cloudisk.fs.vars import CLOUDISK_ROOT
 
 
 __all__ = [
     "fs",
-    "CLOUDISK_DIR_PATH",
+    "CLOUDISK_ROOT",
     "init_file_structure",
-    "is_subpath",
     "link_path",
     "unlink_path",
 ]

@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from cloudisk import fs
-from cloudisk.static.static import METADATA_FILE_PATH
+from cloudisk.fs.vars import METADATA_FILE_PATH
 
 _ENCODING = "utf-8"
 _ENSURE_ASCII = False
@@ -67,7 +67,7 @@ def create_metadata(
             json.dump({}, f, ensure_ascii=_ENSURE_ASCII)
 
     data = _load()
-    if "error" in data.keys():
+    if "error" in data:
         return data
 
     if name in data:
