@@ -1,9 +1,11 @@
 from pathlib import Path
 from typing import Callable, Concatenate
 
-from cloudisk import logger
+from cloudisk.infra.logger import get_logger
 
 BoolFunc = Callable[Concatenate[Path, ...], bool]
+
+logger = get_logger("cloudisk.decorators")
 
 
 def ask_remove_file(func: BoolFunc):

@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
-from ...fs import CLOUDISK_STATIC
-from ...logger import get_logger
+from cloudisk.fs.vars import CLOUDISK_STATIC
+from cloudisk.infra.logger import get_logger
 
 logger = get_logger("cloudisk.api")
 

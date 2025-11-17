@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 
-from ..fs import CLOUDISK_STATIC
+from cloudisk.fs.vars import CLOUDISK_STATIC
+
 from . import get_logger
 from .routes import files_router, root_router
 
