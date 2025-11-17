@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "cloudisk"
 version = "0.1.0"
@@ -5,6 +9,7 @@ description = "Uncentralized content distribution system, on your own cloud"
 readme = "README.md"
 license = { text = "" }
 requires-python = ">=3.11"
+scripts.cloudisk = "cloudisk:main"
 dependencies = [
     "fastapi>=0.121.0",
     "filetype>=1.2.0",
