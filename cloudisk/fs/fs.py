@@ -1,10 +1,10 @@
 import os
 from pathlib import Path
 
+from utils import remove_path
+
 from cloudisk import logger
 from cloudisk.fs.vars import CLOUDISK_ROOT
-
-from utils import remove_path
 
 
 def init_file_structure(path: Path) -> bool:
