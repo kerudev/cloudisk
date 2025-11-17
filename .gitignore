@@ -12,8 +12,9 @@ venv/
 # caches
 __pycache__/
 .pytest_cache/
-.mypy_cache/
+.ruff_cache
 
 # Artifacts
 *.log
 *.sqlite3
+*.egg-info
