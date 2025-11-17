@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any
 
 from cloudisk import fs
-from cloudisk.fs.vars import METADATA_FILE_PATH
+from cloudisk.fs.vars import METADATA_FILE
 
 _ENCODING = "utf-8"
 _ENSURE_ASCII = False
@@ -11,21 +11,21 @@ _ENSURE_ASCII = False
 
 # region Private methods
 def _init_metadata_file() -> bool:
-    if METADATA_FILE_PATH.exists():
+    if METADATA_FILE.exists():
         return True  # Ya existe, todo fino
-    return fs.init_file_structure(METADATA_FILE_PATH)
+    return fs.init_file_structure(METADATA_FILE)
 
 
 def _save(data: dict):
-    with open(METADATA_FILE_PATH, "w", encoding=_ENCODING) as f:
+    with open(METADATA_FILE, "w", encoding=_ENCODING) as f:
         json.dump(data, f, ensure_ascii=_ENSURE_ASCII, indent=4)
 
 
 def _load() -> dict:
-    if not METADATA_FILE_PATH.is_file():
+    if not METADATA_FILE.is_file():
         return {"error": "Metadata file does not exist."}
 
-    with open(METADATA_FILE_PATH, "r", encoding=_ENCODING) as f:
+    with open(METADATA_FILE, "r", encoding=_ENCODING) as f:
         return json.load(f)
 
 
@@ -63,7 +63,7 @@ def create_metadata(
     """
     # If folder does not exist, we initialize it
     if not _init_metadata_file():
-        with open(METADATA_FILE_PATH, "w", encoding=_ENCODING) as f:
+        with open(METADATA_FILE, "w", encoding=_ENCODING) as f:
             json.dump({}, f, ensure_ascii=_ENSURE_ASCII)
 
     data = _load()
