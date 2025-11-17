@@ -41,15 +41,3 @@ To install the `pre-commit` hook:
 ```sh
 pre-commit install
 ```
-
-
-## How to run modeules without import problems
-
-```sh
-py -m cloudisk.{folder}.{folder2}.{...}
-```
-
-> E.g.
-```sh
-py -m cloudisk.src.config
-```

@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 
 from cloudisk import logger
-from cloudisk.static.static import CLOUDISK_DIR_PATH
+from cloudisk.fs.vars import CLOUDISK_ROOT
 
-from .utils import remove_path
+from utils import remove_path
 
 
 def init_file_structure(path: Path) -> bool:
@@ -19,7 +19,7 @@ def init_file_structure(path: Path) -> bool:
     return True
 
 
-def link_path(src: Path, dst: Path = CLOUDISK_DIR_PATH):
+def link_path(src: Path, dst: Path = CLOUDISK_ROOT):
     if not src.exists():
         logger.error(f"'{src}' doesn't exist")
 

@@ -2,7 +2,7 @@ import argparse
 from enum import StrEnum, auto
 from pathlib import Path
 
-from fs import CLOUDISK_DIR_PATH
+from fs import CLOUDISK_ROOT
 
 PATH_FLAGS = ("-p", "--path")
 
@@ -25,10 +25,10 @@ def parse() -> argparse.Namespace:
     init_parser = subparsers.add_parser(
         Command.INIT.value, help="Creates the basic configuration to run cloudisk"
     )
-    init_parser.add_argument(*PATH_FLAGS, type=Path, default=CLOUDISK_DIR_PATH, help="")
+    init_parser.add_argument(*PATH_FLAGS, type=Path, default=CLOUDISK_ROOT, help="")
 
     link_parser = subparsers.add_parser(
-        Command.LINK.value, help=f"Creates a symlink inside {CLOUDISK_DIR_PATH}"
+        Command.LINK.value, help=f"Creates a symlink inside {CLOUDISK_ROOT}"
     )
     link_parser.add_argument(
         *PATH_FLAGS,
@@ -41,7 +41,7 @@ def parse() -> argparse.Namespace:
     )
 
     unlink_parser = subparsers.add_parser(
-        Command.UNLINK.value, help=f"Removes a symlink inside {CLOUDISK_DIR_PATH}"
+        Command.UNLINK.value, help=f"Removes a symlink inside {CLOUDISK_ROOT}"
     )
     unlink_parser.add_argument(*PATH_FLAGS, type=Path)
     subparsers.add_parser(
