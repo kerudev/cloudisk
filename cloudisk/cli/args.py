@@ -2,7 +2,7 @@ import argparse
 from enum import StrEnum, auto
 from pathlib import Path
 
-from cloudisk.fs.vars import CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_ROOT
 
 PATH_FLAGS = ("-p", "--path")
 
@@ -14,7 +14,7 @@ class Command(StrEnum):
     RUN = auto()
 
 
-def parse() -> argparse.Namespace:
+def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="cloudisk",
         description="Uncentralized content distribution system, on your own cloud",
@@ -25,7 +25,7 @@ def parse() -> argparse.Namespace:
     init_parser = subparsers.add_parser(
         Command.INIT.value, help="Creates the basic configuration to run cloudisk"
     )
-    init_parser.add_argument(*PATH_FLAGS, type=Path, default=CLOUDISK_ROOT, help="")
+    init_parser.add_argument(*PATH_FLAGS, type=Path, default=CLOUDISK_ROOT)
 
     link_parser = subparsers.add_parser(
         Command.LINK.value, help=f"Creates a symlink inside {CLOUDISK_ROOT}"
@@ -43,7 +43,13 @@ def parse() -> argparse.Namespace:
     unlink_parser = subparsers.add_parser(
         Command.UNLINK.value, help=f"Removes a symlink inside {CLOUDISK_ROOT}"
     )
-    unlink_parser.add_argument(*PATH_FLAGS, type=Path)
+    unlink_parser.add_argument(
+        *PATH_FLAGS,
+        type=Path,
+        required=True,
+        help="Path can refer to a file or dir",
+    )
+
     subparsers.add_parser(
         Command.RUN.value, help="Runs the cloudisk server on 0.0.0.0:8000"
     )
