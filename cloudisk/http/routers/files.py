@@ -60,6 +60,7 @@ async def get_files(
         try:
             content_type = get_mime_type(storage_path)
         except Exception as e:
+            content_type = None
             logger.warning(f"Could not get mime type for file {storage_path}: {e}")
 
         if content_type is None:
