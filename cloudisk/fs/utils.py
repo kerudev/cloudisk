@@ -18,7 +18,8 @@ def get_mime_type(path: Path) -> str | None:
 
 def is_subpath(parent_path: Path, child_path: Path) -> bool:
     """Check if child path is subpath ot parent_path."""
-    return parent_path.resolve() in child_path.resolve().parents
+    # Normalize child parents paths
+    return parent_path.resolve() in (parent.resolve() for parent in child_path.parents)
 
 
 @ask_remove_file
