@@ -89,15 +89,13 @@ async def delete_file(
 
     storage_path = CLOUDISK_ROOT / path
 
+    storage_path_posix = storage_path.as_posix()
+
     if not storage_path.exists():
-        raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
+        raise HTTPException(404, f"File at {storage_path_posix} not found")
 
     if not is_subpath(CLOUDISK_ROOT, storage_path):
-        raise HTTPException(
-            403, f"You are not allowed to delete {storage_path.as_posix()}"
-        )
-
-    storage_path_posix = storage_path.as_posix()
+        raise HTTPException(403, f"You are not allowed to delete {storage_path_posix}")
 
     if storage_path.is_symlink():
         storage_path.unlink()
