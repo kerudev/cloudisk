@@ -112,4 +112,4 @@ async def delete_file(
             f"{storage_path_posix} is not a symlink, dir or file. It will not be deleted",
         )
 
-    return JSONResponse(f"{storage_path_posix} deleted correctly")
+    return JSONResponse({"message": f"{storage_path_posix} deleted correctly"})
