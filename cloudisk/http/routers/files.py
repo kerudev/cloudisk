@@ -77,7 +77,16 @@ async def get_files(
         )
 
 
-@files.delete("")
+@files.delete(
+    "",
+    responses={
+        200: {"description": "path deleted correctly."},
+        400: {"description": "Path is not a directory or a file."},
+        403: {"description": "User tried to delete path from a non permitted one."},
+        404: {"description": "Path does not exist."},
+        500: {"description": "Internal server error."},
+    },
+)
 async def delete_file(
     request: Request,
     path: Path = Query(
@@ -97,19 +106,24 @@ async def delete_file(
     if not is_subpath(CLOUDISK_ROOT, storage_path):
         raise HTTPException(403, f"You are not allowed to delete {storage_path_posix}")
 
-    if storage_path.is_symlink():
-        storage_path.unlink()
+    try:
+        if storage_path.is_symlink():
+            storage_path.unlink()
 
-    elif storage_path.is_dir():
-        os.remove(storage_path)
+        elif storage_path.is_dir():
+            os.remove(storage_path)
 
-    elif storage_path.is_file():
-        os.remove(storage_path)
+        elif storage_path.is_file():
+            os.remove(storage_path)
 
-    else:
-        raise HTTPException(
-            403,
-            f"{storage_path_posix} is not a symlink, dir or file. It will not be deleted",
-        )
+        else:
+            raise HTTPException(
+                400,
+                f"{storage_path_posix} is not a symlink, "
+                "dir or file. It will not be deleted",
+            )
+
+    except Exception as e:
+        raise HTTPException(500, f"{storage_path_posix} could not be deleted: {e}")
 
     return JSONResponse({"message": f"{storage_path_posix} deleted correctly"})
