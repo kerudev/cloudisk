@@ -26,7 +26,8 @@ files = APIRouter(prefix="/files", tags=["files"])
 async def get_files(
     request: Request,
     path: Optional[Path] = Query(
-        None, description=f"File path to be searched from {CLOUDISK_ROOT.as_posix()}"
+        None,
+        description=f"File or dir path to be searched from {CLOUDISK_ROOT.as_posix()}",
     ),
 ):
     logger.info(f"Request on get_files: query_params - {dict(request.query_params)}")
@@ -39,8 +40,9 @@ async def get_files(
             return FileResponse(storage_path)
 
         if not is_subpath(CLOUDISK_ROOT, storage_path):
-            files = os.listdir(storage_path)
-            return JSONResponse({"files": files})
+            raise HTTPException(
+                403, f"You are not allowed to retrieve {storage_path.as_posix()}"
+            )
 
     storage_path_posix = storage_path.as_posix()
 
@@ -73,3 +75,43 @@ async def get_files(
         raise HTTPException(
             500, f"Error when listing {storage_path_posix} directory: {e}"
         )
+
+
+@files.delete("")
+async def delete_file(
+    request: Request,
+    path: Path = Query(
+        ...,
+        description=f"File or dir path to be deleted from {CLOUDISK_ROOT.as_posix()}",
+    ),
+):
+    logger.info(f"Request on delete_file: query_params - {dict(request.query_params)}")
+
+    storage_path = CLOUDISK_ROOT / path
+
+    if not storage_path.exists():
+        raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
+
+    if not is_subpath(CLOUDISK_ROOT, storage_path):
+        raise HTTPException(
+            403, f"You are not allowed to delete {storage_path.as_posix()}"
+        )
+
+    storage_path_posix = storage_path.as_posix()
+
+    if storage_path.is_symlink():
+        storage_path.unlink()
+
+    elif storage_path.is_dir():
+        os.remove(storage_path)
+
+    elif storage_path.is_file():
+        os.remove(storage_path)
+
+    else:
+        raise HTTPException(
+            403,
+            f"{storage_path_posix} is not a symlink, dir or file. It will not be deleted",
+        )
+
+    return JSONResponse(f"{storage_path_posix} deleted correctly")
