@@ -36,8 +36,23 @@ To install the dependencies in `pyproject.toml`, run:
 uv sync
 ```
 
-To install the `pre-commit` hook:
+To install the [`pre-commit`](https://medium.com/@jay.gokani/pre-commit-hooks-39bb1668dc95) hook:
 
 ```sh
 pre-commit install
+```
+
+## Formatting validation (only your changes)
+```sh
+pre-commit run
+```
+
+## Formatting validation (all files)
+```sh
+pre-commit run --all-files
+```
+
+## Run the linter
+```sh
+ruff check . # From parent folder
 ```
