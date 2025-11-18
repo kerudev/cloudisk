@@ -22,13 +22,14 @@ def parse_args() -> argparse.Namespace:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
-    init_parser = subparsers.add_parser(
-        Command.INIT.value, help="Creates the basic configuration to run cloudisk"
+    subparsers.add_parser(
+        Command.INIT.value,
+        help=f"Creates the basic configuration to run cloudisk at '{CLOUDISK_ROOT}'",
     )
-    init_parser.add_argument(*PATH_FLAGS, type=Path, default=CLOUDISK_ROOT)
 
     link_parser = subparsers.add_parser(
-        Command.LINK.value, help=f"Creates a symlink inside {CLOUDISK_ROOT}"
+        Command.LINK.value,
+        help=f"Creates a symlink inside {CLOUDISK_ROOT}",
     )
     link_parser.add_argument(
         *PATH_FLAGS,
@@ -41,7 +42,8 @@ def parse_args() -> argparse.Namespace:
     )
 
     unlink_parser = subparsers.add_parser(
-        Command.UNLINK.value, help=f"Removes a symlink inside {CLOUDISK_ROOT}"
+        Command.UNLINK.value,
+        help=f"Removes a symlink inside {CLOUDISK_ROOT}",
     )
     unlink_parser.add_argument(
         *PATH_FLAGS,
@@ -51,7 +53,8 @@ def parse_args() -> argparse.Namespace:
     )
 
     subparsers.add_parser(
-        Command.RUN.value, help="Runs the cloudisk server on 0.0.0.0:8000"
+        Command.RUN.value,
+        help="Runs the cloudisk server on 0.0.0.0:8000",
     )
 
     return parser.parse_args()
