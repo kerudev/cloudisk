@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Query, Request
+from fastapi import APIRouter, File, Query, Request, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
@@ -39,7 +39,7 @@ async def get_files(
         if storage_path.is_file():
             return FileResponse(storage_path)
 
-        if not is_subpath(CLOUDISK_ROOT, storage_path):
+        if not is_subpath(storage_path):
             raise HTTPException(
                 403, f"You are not allowed to retrieve {storage_path.as_posix()}"
             )
@@ -56,7 +56,7 @@ async def get_files(
 
     try:
         if storage_path.is_dir():
-            files = os.listdir(storage_path)
+            files = sorted(os.listdir(storage_path))
             return JSONResponse({"files": files})
 
         try:
@@ -75,6 +75,33 @@ async def get_files(
         raise HTTPException(
             500, f"Error when listing {storage_path_posix} directory: {e}"
         )
+
+
+@files.post(
+    "",
+    responses={
+        201: {"description": "List of files or specific file."},
+        403: {"description": "User tried to create a file in a non permitted path."},
+    },
+)
+async def upload(file: UploadFile = File(...)):
+    filename = Path(file.filename)
+    # file_type = file.content_type
+
+    path = CLOUDISK_ROOT / filename
+
+    if not is_subpath(path):
+        raise HTTPException(403, f"You are not allowed to create {path.as_posix()}")
+
+    i = 1
+    while (path).exists():
+        path = path.with_stem(f"{filename.stem}_{i}")
+        i += 1
+
+    with open(path, "wb") as f:
+        f.write(await file.read())
+
+    return JSONResponse({"message": f"{path.name} uploaded successfully"}, 201)
 
 
 @files.delete(
@@ -103,7 +130,7 @@ async def delete_file(
     if not storage_path.exists():
         raise HTTPException(404, f"File at {storage_path_posix} not found")
 
-    if not is_subpath(CLOUDISK_ROOT, storage_path):
+    if not is_subpath(storage_path):
         raise HTTPException(403, f"You are not allowed to delete {storage_path_posix}")
 
     try:
