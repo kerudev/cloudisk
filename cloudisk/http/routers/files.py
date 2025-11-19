@@ -110,10 +110,7 @@ async def delete_file(
         if storage_path.is_symlink():
             storage_path.unlink()
 
-        elif storage_path.is_dir():
-            os.remove(storage_path)
-
-        elif storage_path.is_file():
+        elif storage_path.is_dir() or storage_path.is_file():
             os.remove(storage_path)
 
         else:
