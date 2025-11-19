@@ -1,4 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from cloudisk.http.routers import files, root
@@ -31,4 +32,4 @@ app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="st
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, e: Exception):
     logger.critical(f"Unhandled exception occurred: {e}")
-    return HTTPException(500, {"detail": "Internal server error"})
+    return JSONResponse({"message": "Internal server error"}, 500)

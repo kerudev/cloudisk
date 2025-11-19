@@ -5,6 +5,8 @@ from typing import Literal
 
 from filetype import guess_mime
 
+from cloudisk.vars import CLOUDISK_ROOT
+
 from .decorators import ask_empty_dir, ask_remove_file
 
 
@@ -16,8 +18,8 @@ def get_mime_type(path: Path) -> str | None:
     return guess_mime(path)
 
 
-def is_subpath(parent_path: Path, child_path: Path) -> bool:
-    """Check if child path is subpath ot parent_path."""
+def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
+    """Check if child path is subpath of parent_path."""
     # Normalize child parents paths
     return parent_path.resolve() in (parent.resolve() for parent in child_path.parents)
 
