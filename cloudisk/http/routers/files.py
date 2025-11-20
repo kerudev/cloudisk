@@ -94,7 +94,7 @@ async def upload(file: UploadFile = File(...)):
         raise HTTPException(403, f"You are not allowed to create {path.as_posix()}")
 
     i = 1
-    while (path).exists():
+    while path.exists():
         path = path.with_stem(f"{filename.stem}_{i}")
         i += 1
 

@@ -14,7 +14,7 @@ ENSURE_ASCII = False
 
 
 class Metadata(BaseModel):
-    file_uuid: str = Field(default_factory=lambda: str(uuid4()))
+    file_uuid: str = None
 
     version: str = "1.0"
     content_type: str
@@ -33,6 +33,8 @@ class Metadata(BaseModel):
 
     def model_post_init(self, context: Any) -> None:  # noqa
         now = int(datetime.now().timestamp())
+
+        self.file_uuid = str(uuid4())
 
         self.created_at = now
         self.updated_at = now
@@ -59,6 +61,9 @@ def _load() -> dict:
 
 
 # endregion
+
+
+# TODO refector functions to be inside the Metadata model
 
 
 def create_metadata(name: str, metadata: Metadata) -> dict:
@@ -129,7 +134,7 @@ def read_metadata(name: str) -> dict:
         raise KeyError(f"No metadata file exists for '{name}'")
 
     # File is active
-    return data[name] if file_exists(data[name]) else None
+    return data[name] if file_exists(data[name]) else {}
 
 
 def file_exists(data: dict) -> bool:
@@ -175,7 +180,7 @@ def update_metadata(name: str, **kwargs: Any) -> dict:
         raise KeyError(f"No metadata file exists for '{name}'")
 
     # Updated keys
-    data[name]["extra"].update(kwargs)
+    data[name].setdefault("extra", {}).update(kwargs)
     data[name]["updated_at"] = int(datetime.now().timestamp())
 
     # Save data

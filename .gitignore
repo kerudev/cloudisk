@@ -18,3 +18,4 @@ __pycache__/
 *.log
 *.sqlite3
 *.egg-info
+.coverage
