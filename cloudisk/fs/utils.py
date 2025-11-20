@@ -27,6 +27,7 @@ def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
 @ask_remove_file
 def remove_file(path: Path) -> Literal[True]:
     path.unlink()
+    # TODO. Remove metadata
     return True
 
 
