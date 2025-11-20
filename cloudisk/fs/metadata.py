@@ -1,40 +1,62 @@
 import json
 from datetime import datetime
+from pathlib import Path
 from typing import Any
+from uuid import uuid4
+
+from pydantic import BaseModel
+from pydantic.fields import Field
 
 from cloudisk.fs.commands import init_file_structure
-from cloudisk.vars import METADATA_FILE
+from cloudisk.vars import CLOUDISK_ROOT, METADATA_FILE
 
-_ENCODING = "utf-8"
-_ENSURE_ASCII = False
+ENCODING = "utf-8"
+ENSURE_ASCII = False
+
+
+class Metadata(BaseModel):
+    file_uuid: str = Field(default_factory=lambda: str(uuid4()))
+
+    version: str = "1.0"
+    content_type: str = Field(...)
+    status: int = Field(default=1)
+
+    created_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
+    updated_at: int = int(datetime.now().timestamp())
+    deleted_at: int = Field(default=0)
+
+    file_name: str = Field(...)
+    file_type: str = Field(...)
+    file_path: str = Field(...)
+    file_size: int = Field(...)
+
+    extra_data: dict[str, Any] = Field(default_factory=dict)
 
 
 # region Private methods
 def _init_metadata_file() -> bool:
-    if METADATA_FILE.exists():
-        return True  # Ya existe, todo fino
-    return init_file_structure(METADATA_FILE)
+    if not Path(CLOUDISK_ROOT).is_dir():
+        init_file_structure(CLOUDISK_ROOT)
+    return METADATA_FILE.is_file()
 
 
 def _save(data: dict):
-    with open(METADATA_FILE, "w", encoding=_ENCODING) as f:
-        json.dump(data, f, ensure_ascii=_ENSURE_ASCII, indent=4)
+    with open(METADATA_FILE, "w", encoding=ENCODING) as f:
+        json.dump(data, f, ensure_ascii=ENSURE_ASCII, indent=4)
 
 
 def _load() -> dict:
     if not METADATA_FILE.is_file():
         return {"error": "Metadata file does not exist."}
 
-    with open(METADATA_FILE, "r", encoding=_ENCODING) as f:
+    with open(METADATA_FILE, "r", encoding=ENCODING) as f:
         return json.load(f)
 
 
 # endregion
 
 
-def create_metadata(
-    name: str, content_type: str, path: str, size: int, **extra: Any
-) -> dict:
+def create_metadata(name: str, metadata: Metadata) -> dict:
     """
     Create a metadata as a json file for the recent file created.
 
@@ -42,14 +64,8 @@ def create_metadata(
     ----------
     name : str
         Name of the file
-    content_type : str
-        Extension of the file
-    path : str
-        Where the file is stored
-    size : int
-        How much the file weights
-    extra: Any
-        Any extra medatada considered important
+    metadata : Metadata
+        Metadata object
 
     Returns
     -------
@@ -63,8 +79,8 @@ def create_metadata(
     """
     # If folder does not exist, we initialize it
     if not _init_metadata_file():
-        with open(METADATA_FILE, "w", encoding=_ENCODING) as f:
-            json.dump({}, f, ensure_ascii=_ENSURE_ASCII)
+        with open(METADATA_FILE, "w", encoding=ENCODING) as f:
+            json.dump({}, f, ensure_ascii=ENSURE_ASCII)
 
     data = _load()
     if "error" in data:
@@ -74,21 +90,13 @@ def create_metadata(
         raise ValueError(f"File with name {name} already exist")
 
     # Adjusts params
-    cur_time = int(datetime.now().timestamp())
-    metadata = {
-        "name": name,
-        "content-type": content_type,
-        "path": path,
-        "size": size,
-        "created_at": cur_time,
-        "updated_at": cur_time,
-        **extra,  # Any extra metadata the user wants to include
-    }
+    # Ensure the Pydantic model has the correct file name and a fresh updated_at timestamp
+    metadata_dict = metadata.model_copy(update={"file_name": name}).model_dump()
 
     # Save file
-    data.update({name: metadata})
+    data.update({name: metadata_dict})
     _save(data)
-    return metadata
+    return metadata_dict
 
 
 def read_metadata(name: str) -> dict:
@@ -114,7 +122,28 @@ def read_metadata(name: str) -> dict:
 
     if name not in data:
         raise KeyError(f"No metadata file exists for '{name}'")
-    return data[name]
+
+    # File is active
+    return data[name] if file_exists(data[name]) == 0 else {}
+
+
+def file_exists(data: dict) -> bool:
+    """
+    Check from metadata if file exists.
+
+    Parameters
+    ----------
+    data : dict
+        Metadata of the file
+
+    Returns
+    -------
+    bool
+        True if file exists, False otherwise
+    """
+    deleted_at = data.get("deleted_at", 0)
+    status = data.get("status", 0)
+    return deleted_at == 0 and status == 1
 
 
 def update_metadata(name: str, **extra) -> dict:
@@ -143,7 +172,7 @@ def update_metadata(name: str, **extra) -> dict:
         raise KeyError(f"No metadata file exists for '{name}'")
 
     # Updated keys
-    data[name].update(extra)
+    data[name]["extra_data"].update(extra["extra_data"])
     data[name]["updated_at"] = int(datetime.now().timestamp())
 
     # Save data
@@ -193,11 +222,23 @@ def list_file_names() -> list:
 if __name__ == "__main__":
     print(
         create_metadata(
-            name="test", content_type="json", path=str(METADATA_FILE_PATH), size=1
+            name="test",
+            metadata=Metadata(
+                content_type="text/plain",
+                file_type="txt",
+                file_name="test.txt",
+                file_path="/some/path/test.txt",
+                file_size=1234,
+                extra_data={"author": "gandordev"},
+            ),
         )
     )
+    input("----------------------------------------------------------")
     print(read_metadata(name="test"))
-    print(update_metadata(name="test", extra={"something":"foo"}))
+    input("----------------------------------------------------------")
+    print(update_metadata(name="test", extra={"something": "foo"}))
+    input("----------------------------------------------------------")
     print(list_file_names())
+    input("----------------------------------------------------------")
     print(delete_metadata(name="test"))
 """
