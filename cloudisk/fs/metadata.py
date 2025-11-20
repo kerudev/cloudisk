@@ -4,8 +4,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from pydantic import BaseModel
-from pydantic.fields import Field
+from pydantic import BaseModel, Field
 
 from cloudisk.fs.commands import init_file_structure
 from cloudisk.vars import CLOUDISK_ROOT, METADATA_FILE
@@ -18,19 +17,25 @@ class Metadata(BaseModel):
     file_uuid: str = Field(default_factory=lambda: str(uuid4()))
 
     version: str = "1.0"
-    content_type: str = Field(...)
-    status: int = Field(default=1)
+    content_type: str
+    available: bool = True
 
-    created_at: int = Field(default_factory=lambda: int(datetime.now().timestamp()))
-    updated_at: int = int(datetime.now().timestamp())
-    deleted_at: int = Field(default=0)
+    created_at: int = 0
+    updated_at: int = 0
+    deleted_at: int = 0
 
-    file_name: str = Field(...)
-    file_type: str = Field(...)
-    file_path: str = Field(...)
-    file_size: int = Field(...)
+    file_name: str
+    file_type: str
+    file_path: str
+    file_size: int
 
-    extra_data: dict[str, Any] = Field(default_factory=dict)
+    extra: dict[str, Any] = Field(default_factory=dict)
+
+    def model_post_init(self, context: Any) -> None:  # noqa
+        now = int(datetime.now().timestamp())
+
+        self.created_at = now
+        self.updated_at = now
 
 
 # region Private methods
@@ -124,7 +129,7 @@ def read_metadata(name: str) -> dict:
         raise KeyError(f"No metadata file exists for '{name}'")
 
     # File is active
-    return data[name] if file_exists(data[name]) == 0 else {}
+    return data[name] if file_exists(data[name]) else None
 
 
 def file_exists(data: dict) -> bool:
@@ -141,12 +146,10 @@ def file_exists(data: dict) -> bool:
     bool
         True if file exists, False otherwise
     """
-    deleted_at = data.get("deleted_at", 0)
-    status = data.get("status", 0)
-    return deleted_at == 0 and status == 1
+    return data.get("available", False)
 
 
-def update_metadata(name: str, **extra) -> dict:
+def update_metadata(name: str, **kwargs: Any) -> dict:
     """
     Update `extra` fields for the file selected.
 
@@ -154,8 +157,8 @@ def update_metadata(name: str, **extra) -> dict:
     ----------
     name : str
         Name of the file
-    extra: Any
-        Any extra medatada considered important
+    kwargs : Any
+        Any extra metadata considered important
 
     Returns
     -------
@@ -172,7 +175,7 @@ def update_metadata(name: str, **extra) -> dict:
         raise KeyError(f"No metadata file exists for '{name}'")
 
     # Updated keys
-    data[name]["extra_data"].update(extra["extra_data"])
+    data[name]["extra"].update(kwargs)
     data[name]["updated_at"] = int(datetime.now().timestamp())
 
     # Save data
@@ -188,57 +191,22 @@ def delete_metadata(name: str):
     ----------
     name : str
         Name of the file
-
-    Raises
-    ------
-    KeyError
-        The metadata file does not exist
     """
     data = _load()
-    if name not in data:
-        raise KeyError(f"No metadata file exists for '{name}'")
+    data.pop(name, None)
 
-    # Delete metadata of the selected file
-    del data[name]
     _save(data)
 
 
-def list_file_names() -> list:
+def list_file_names() -> list[str]:
     """
-    Get the names of all the files saves in the clouddisk dir.
+    Get the names of all the files saves in the cloudisk dir.
 
     Returns
     -------
-    list
+    list[str]
         Names of the files
     """
     data = _load()
 
-    names = list(data)
-    return list(names)
-
-
-"""
-if __name__ == "__main__":
-    print(
-        create_metadata(
-            name="test",
-            metadata=Metadata(
-                content_type="text/plain",
-                file_type="txt",
-                file_name="test.txt",
-                file_path="/some/path/test.txt",
-                file_size=1234,
-                extra_data={"author": "gandordev"},
-            ),
-        )
-    )
-    input("----------------------------------------------------------")
-    print(read_metadata(name="test"))
-    input("----------------------------------------------------------")
-    print(update_metadata(name="test", extra={"something": "foo"}))
-    input("----------------------------------------------------------")
-    print(list_file_names())
-    input("----------------------------------------------------------")
-    print(delete_metadata(name="test"))
-"""
+    return list(data)
