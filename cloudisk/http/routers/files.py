@@ -84,22 +84,26 @@ async def get_files(
         403: {"description": "User tried to create a file in a non permitted path."},
     },
 )
-async def upload(file: UploadFile = File(...)):
-    filename = Path(file.filename)
-    # file_type = file.content_type
+async def upload_file(files: list[UploadFile] = File(...)):
+    if not isinstance(files, list):
+        files = [files]
 
-    path = CLOUDISK_ROOT / filename
+    for files in files:
+        filename = Path(files.filename)
+        # file_type = file.content_type
 
-    if not is_subpath(path):
-        raise HTTPException(403, f"You are not allowed to create {path.as_posix()}")
+        path = CLOUDISK_ROOT / filename
 
-    i = 1
-    while path.exists():
-        path = path.with_stem(f"{filename.stem}_{i}")
-        i += 1
+        if not is_subpath(path):
+            raise HTTPException(403, f"You are not allowed to create {path.as_posix()}")
 
-    with open(path, "wb") as f:
-        f.write(await file.read())
+        i = 1
+        while path.exists():
+            path = path.with_stem(f"{filename.stem}_{i}")
+            i += 1
+
+        with open(path, "wb") as f:
+            f.write(await files.read())
 
     return JSONResponse({"message": f"{path.name} uploaded successfully"}, 201)
 
