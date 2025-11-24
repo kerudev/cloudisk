@@ -22,27 +22,18 @@ window.addEventListener("dragenter", e => e.preventDefault());
 
 window.addEventListener("dragover", e => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
 });
 
 window.addEventListener("drop", async e => {
     e.preventDefault();
 
-    const files = [...e.dataTransfer.items].filter(item => item.kind === "file");
-    const file = files[0].getAsFile();
+    const files = [...e.dataTransfer.items].filter(item => item.kind === "file").map(file => file.getAsFile());
 
     const data = new FormData();
-    data.append("file", file);
+    files.forEach(file => data.append("files", file));
 
-    const response = await fetch("/files", {
-        method: "POST",
-        body: data,
-        headers: {
-            "X-File-Type": file.type,
-            "X-File-Name": file.name
-        }
-    });
-
+    const response = await fetch("/files", { method: "POST", body: data });
     const result = await response.json();
 
     if (!result.ok) console.error(result.message);
