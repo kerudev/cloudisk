@@ -1,16 +1,47 @@
 import os
 from pathlib import Path
-from typing import Optional
 
-from fastapi import APIRouter, File, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 
 from cloudisk.fs.utils import get_mime_type, is_subpath
+from cloudisk.http.dependencies import validate_path
 from cloudisk.logger import logger
-from cloudisk.vars import CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_ROOT, METADATA_FILE
+
+EXCLUDED_FILES = [METADATA_FILE]
 
 files = APIRouter(prefix="/files", tags=["files"])
+
+
+async def _list_files(path: Path):
+    path_posix = path.as_posix()
+
+    if not path.exists():
+        raise HTTPException(404, f"{path_posix} path does not exist")
+
+    if not path.is_dir():
+        raise HTTPException(400, f"File {path_posix} is not a directory")
+
+    try:
+        files = sorted(os.listdir(path))
+        files = [file for file in files if file not in EXCLUDED_FILES]
+
+    except Exception as e:
+        raise HTTPException(500, f"Error when listing {path_posix} directory: {e}")
+
+    return JSONResponse({"files": files})
+
+
+async def _download_files(path: Path):
+    try:
+        content_type = get_mime_type(path)
+    except Exception as e:
+        logger.warning(f"Could not get mime type for file {path}: {e}")
+        return FileResponse(path, filename=path.name)
+
+    return FileResponse(path, filename=path.name, media_type=content_type)
 
 
 @files.get(
@@ -23,58 +54,15 @@ files = APIRouter(prefix="/files", tags=["files"])
         500: {"description": "Internal server error."},
     },
 )
-async def get_files(
-    request: Request,
-    path: Optional[Path] = Query(
-        None,
-        description=f"File or dir path to be searched from {CLOUDISK_ROOT.as_posix()}",
-    ),
-):
+async def get_files(request: Request, path: Path = Depends(validate_path)):
     logger.info(f"Request on get_files: query_params - {dict(request.query_params)}")
 
-    storage_path = CLOUDISK_ROOT
-    if path:
-        storage_path = storage_path / path
+    storage_path = (CLOUDISK_ROOT / path).resolve()
 
-        if storage_path.is_file():
-            return FileResponse(storage_path)
+    endpoint = _download_files if storage_path.is_file() else _list_files
+    response = await endpoint(storage_path)
 
-        if not is_subpath(storage_path):
-            raise HTTPException(
-                403, f"You are not allowed to retrieve {storage_path.as_posix()}"
-            )
-
-    storage_path_posix = storage_path.as_posix()
-
-    if not storage_path.exists():
-        raise HTTPException(404, f"{storage_path_posix} path does not exist")
-
-    if not storage_path.is_dir() and not storage_path.is_file():
-        raise HTTPException(
-            400, f"File {storage_path_posix} is not a directory or a file"
-        )
-
-    try:
-        if storage_path.is_dir():
-            files = sorted(os.listdir(storage_path))
-            return JSONResponse({"files": files})
-
-        try:
-            content_type = get_mime_type(storage_path)
-        except Exception as e:
-            content_type = None
-            logger.warning(f"Could not get mime type for file {storage_path}: {e}")
-
-        if content_type is None:
-            # Let Starlette infer file content type
-            return FileResponse(storage_path)
-
-        return FileResponse(storage_path, media_type=content_type)
-
-    except Exception as e:
-        raise HTTPException(
-            500, f"Error when listing {storage_path_posix} directory: {e}"
-        )
+    return response
 
 
 @files.post(
@@ -85,11 +73,8 @@ async def get_files(
     },
 )
 async def upload_file(files: list[UploadFile] = File(...)):
-    if not isinstance(files, list):
-        files = [files]
-
-    for files in files:
-        filename = Path(files.filename)
+    for file in files:
+        filename = Path(file.filename)
         # file_type = file.content_type
 
         path = CLOUDISK_ROOT / filename
@@ -103,7 +88,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
             i += 1
 
         with open(path, "wb") as f:
-            f.write(await files.read())
+            f.write(await file.read())
 
     return JSONResponse({"message": f"{path.name} uploaded successfully"}, 201)
 

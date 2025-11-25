@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 from cloudisk.fs.commands import init_file_structure
-from cloudisk.vars import CLOUDISK_ROOT, METADATA_FILE
+from cloudisk.vars import CLOUDISK_ROOT, METADATA_PATH
 
 ENCODING = "utf-8"
 ENSURE_ASCII = False
@@ -44,19 +44,19 @@ class Metadata(BaseModel):
 def _init_metadata_file() -> bool:
     if not Path(CLOUDISK_ROOT).is_dir():
         init_file_structure(CLOUDISK_ROOT)
-    return METADATA_FILE.is_file()
+    return METADATA_PATH.is_file()
 
 
 def _save(data: dict):
-    with open(METADATA_FILE, "w", encoding=ENCODING) as f:
+    with open(METADATA_PATH, "w", encoding=ENCODING) as f:
         json.dump(data, f, ensure_ascii=ENSURE_ASCII, indent=4)
 
 
 def _load() -> dict:
-    if not METADATA_FILE.is_file():
+    if not METADATA_PATH.is_file():
         return {"error": "Metadata file does not exist."}
 
-    with open(METADATA_FILE, "r", encoding=ENCODING) as f:
+    with open(METADATA_PATH, "r", encoding=ENCODING) as f:
         return json.load(f)
 
 
@@ -89,7 +89,7 @@ def create_metadata(name: str, metadata: Metadata) -> dict:
     """
     # If folder does not exist, we initialize it
     if not _init_metadata_file():
-        with open(METADATA_FILE, "w", encoding=ENCODING) as f:
+        with open(METADATA_PATH, "w", encoding=ENCODING) as f:
             json.dump({}, f, ensure_ascii=ENSURE_ASCII)
 
     data = _load()

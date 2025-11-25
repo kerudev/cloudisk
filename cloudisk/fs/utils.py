@@ -24,6 +24,12 @@ def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     return parent_path.resolve() in (parent.resolve() for parent in child_path.parents)
 
 
+def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
+    """Check if child path is superpath of parent_path."""
+    # Normalize child parents paths
+    return not is_subpath(child_path, parent_path)
+
+
 @ask_remove_file
 def remove_file(path: Path) -> Literal[True]:
     path.unlink()
