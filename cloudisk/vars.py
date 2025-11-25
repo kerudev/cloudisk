@@ -1,5 +1,7 @@
 from pathlib import Path
 
-CLOUDISK_ROOT = Path.home() / ".cloudisk"
-METADATA_FILE = CLOUDISK_ROOT / ".metadata.json"
-CLOUDISK_STATIC = Path(__file__).parent / "static"
+CLOUDISK_ROOT = (Path.home() / ".cloudisk").resolve()
+CLOUDISK_STATIC = (Path(__file__).parent / "static").resolve()
+
+METADATA_FILE = ".metadata.json"
+METADATA_PATH = (CLOUDISK_ROOT / METADATA_FILE).resolve()

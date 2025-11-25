@@ -10,12 +10,51 @@ const newLink = text => {
 
     const a = document.createElement("a");
     a.textContent = text;
-    a.href = `?${params.toString()}`;
+    a.addEventListener('click', async e => {
+        e.preventDefault();
+
+        const res = await fetch(`/files?${params.toString()}`);
+        await downloadResponseBlob(res);
+    })
 
     const li = document.createElement("li");
     li.appendChild(a);
 
     return li;
+};
+
+/**
+ * Processes the value of the `Content-Disposition` header and returns an UTF-8
+ * encoded string.
+ *
+ * More info: https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Disposition
+ *
+ * @param {string} header - Value of the `Content-Disposition` header.
+ * @returns {string} UTF-8 encoded string.
+ */
+const processContentDisposition = header => {
+    if (header.includes("filename="))
+        return header.split('filename=')[1].replaceAll('"', '');
+
+    if (header.includes("filename*=utf-8''"))
+        return decodeURIComponent(header.split("filename*=utf-8''")[1]);
+}
+
+const downloadResponseBlob = async response => {
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const headers = Object.fromEntries(response.headers);
+    const name = processContentDisposition(headers['content-disposition']);
+
+    const downloader = Object.assign(document.createElement('a'), {
+        href: blobUrl,
+        download: name,
+    });
+
+    downloader.click();
+
+    window.URL.revokeObjectURL(blobUrl);
 };
 
 window.addEventListener("dragenter", e => e.preventDefault());
