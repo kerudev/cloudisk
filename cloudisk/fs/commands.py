@@ -8,27 +8,28 @@ from cloudisk.vars import CLOUDISK_ROOT
 logger = get_logger("cloudisk.fs")
 
 
-def init_file_structure(path: Path) -> bool:
+def init_cloudisk_folder() -> bool:
     # Handle it asking for user consent
-    if path.exists() and not remove_path(path):
-        logger.error(f"Failed initializing folder {path}")
+    if CLOUDISK_ROOT.exists() and not remove_path(CLOUDISK_ROOT):
+        logger.error(f"Failed initializing folder {CLOUDISK_ROOT}")
         return False
 
-    path.mkdir()
-    logger.info(f"Initialialized folder {path} successfully")
+    CLOUDISK_ROOT.mkdir()
+    logger.info(f"Initialized folder {CLOUDISK_ROOT} successfully")
 
     return True
 
 
-def link_path(src: Path, dst: Path = CLOUDISK_ROOT):
-    if not src.exists():
-        logger.error(f"'{src}' doesn't exist")
+# TODO handle dst exists
+def link_path(path: Path, dst: Path = CLOUDISK_ROOT):
+    if not path.exists():
+        logger.error(f"'{path}' doesn't exist")
 
-    if src.is_file():
-        os.symlink(src, dst / src.name, target_is_directory=True)
-        logger.info(f"Linked '{src}' -> '{dst}'")
+    if path.is_file():
+        os.symlink(path, dst / path.name, target_is_directory=True)
+        logger.info(f"Linked '{path}' -> '{dst}'")
 
-    if src.is_dir() and (files := os.scandir(src)):
+    if path.is_dir() and (files := os.scandir(path)):
         for file in files:
             os.symlink(file.path, dst / file.name, target_is_directory=True)
             logger.info(f"Linked '{file.path}' -> '{dst}'")

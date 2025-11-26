@@ -42,8 +42,9 @@ class Metadata(BaseModel):
 
 # region Private methods
 def _init_metadata_file() -> bool:
-    if not Path(CLOUDISK_ROOT).is_dir():
-        init_file_structure(CLOUDISK_ROOT)
+    if not CLOUDISK_ROOT.is_dir():
+        init_cloudisk_folder()
+
     return METADATA_PATH.is_file()
 
 
