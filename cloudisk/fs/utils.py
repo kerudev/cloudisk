@@ -1,13 +1,13 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Literal
 
 from filetype import guess_mime
 
+from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_ROOT
 
-from .decorators import ask_empty_dir, ask_remove_file
+logger = get_logger("cloudisk.fs")
 
 
 def get_mime_type(path: Path) -> str | None:
@@ -30,15 +30,29 @@ def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     return not is_subpath(child_path, parent_path)
 
 
-@ask_remove_file
-def remove_file(path: Path) -> Literal[True]:
+def ask_remove_file(path: Path) -> bool:
+    msg = f"{path} already exists. Do you want to remove it? (y/n)\n> "
+
+    while (remove := input(msg)) not in ("y", "n"):
+        logger.error(f"Unexpected answer. Expected 'y' or 'n', got {remove}")
+
+    if remove == "n":
+        return False
+
     path.unlink()
-    # TODO. Remove metadata
+
     return True
 
 
-@ask_empty_dir
-def remove_dir(path: Path) -> Literal[True]:
+def ask_remove_dir(path: Path) -> bool:
+    msg = f"{path} is not empty. Do you want to remove all of its content? (y/n)\n> "
+
+    while (remove := input(msg)) not in ("y", "n"):
+        logger.error(f"Unexpected answer. Expected 'y' or 'n', got {remove}")
+
+    if remove == "n":
+        return False
+
     # If dir is empty
     if not os.listdir(path):
         path.rmdir()
@@ -49,12 +63,12 @@ def remove_dir(path: Path) -> Literal[True]:
     return True
 
 
-def remove_path(path: Path) -> bool:
+def ask_remove_path(path: Path) -> bool:
     if path.is_file():
-        return remove_file(path)
+        return ask_remove_file(path)
 
     if path.is_dir():
-        return remove_dir(path)
+        return ask_remove_dir(path)
 
     raise Exception(
         f"{path} already exists and is not a file or a directory. "

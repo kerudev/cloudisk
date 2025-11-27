@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from cloudisk.fs.utils import remove_path
+from cloudisk.fs.utils import ask_remove_path
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_ROOT
 
@@ -10,7 +10,7 @@ logger = get_logger("cloudisk.fs")
 
 def init_cloudisk_folder() -> bool:
     # Handle it asking for user consent
-    if CLOUDISK_ROOT.exists() and not remove_path(CLOUDISK_ROOT):
+    if CLOUDISK_ROOT.exists() and not ask_remove_path(CLOUDISK_ROOT):
         logger.error(f"Failed initializing folder {CLOUDISK_ROOT}")
         return False
 
