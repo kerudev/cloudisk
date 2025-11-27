@@ -20,19 +20,27 @@ def init_cloudisk_folder() -> bool:
     return True
 
 
-# TODO handle dst exists
-def link_path(path: Path, dst: Path = CLOUDISK_ROOT):
+def link_path(path: Path):
+    """
+    Create a symlink to `path`.
+
+    Parameters
+    ----------
+    path : Path
+        The path to link.
+    """
     if not path.exists():
         logger.error(f"'{path}' doesn't exist")
+        return
 
-    if path.is_file():
-        os.symlink(path, dst / path.name, target_is_directory=True)
-        logger.info(f"Linked '{path}' -> '{dst}'")
+    dst = CLOUDISK_ROOT / path.name
 
-    if path.is_dir() and (files := os.scandir(path)):
-        for file in files:
-            os.symlink(file.path, dst / file.name, target_is_directory=True)
-            logger.info(f"Linked '{file.path}' -> '{dst}'")
+    if dst.exists():
+        logger.error(f"'{dst}' already exists")
+        return
+
+    os.symlink(path, dst, target_is_directory=True)
+    logger.info(f"Linked '{path}' -> '{dst}'")
 
 
 def unlink_path(path: Path):

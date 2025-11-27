@@ -1,4 +1,10 @@
-from cloudisk.cli.args import PATH_FLAGS, Command, CommandName, Parser, RequiredFlag
+from cloudisk.cli.args import (
+    PATH_FLAGS,
+    Command,
+    CommandName,
+    Parser,
+    RequiredFlag,
+)
 from cloudisk.fs.commands import init_cloudisk_folder, link_path, unlink_path
 from cloudisk.http import server
 from cloudisk.vars import CLOUDISK_ROOT
@@ -25,7 +31,7 @@ def run():
                             "If path is a file, creates a symlink to that file."
                             "If path is a dir, creates a symlink for each file/dir inside itself."  # noqa: E501
                         ),
-                    )
+                    ),
                 ],
             ),
             Command(
