@@ -1,24 +1,12 @@
 # cloudisk
-Uncentralized content distribution system, on your own cloud
 
+A decentralized content distribution system. Run your own cloud.
 
 ## Dependencies
 
 Tools:
 - Python >= 3.11
 - uv >= 0.9.9
-
-Libraries:
-- fastapi >= 0.121.0
-- sqlmodel >= 0.0.27
-- uvicorn >= 0.38.0
-
-Dev libraries:
-- pre-commit >= 4.4.0
-- pytest >= 8.4.2
-- pytest-cov >= 7.0.0
-- ruff >= 0.14.3
-
 
 ## Install dependencies
 
@@ -36,23 +24,27 @@ To install the dependencies in `pyproject.toml`, run:
 uv sync
 ```
 
-To install the [`pre-commit`](https://medium.com/@jay.gokani/pre-commit-hooks-39bb1668dc95) hook:
+## Linting and formatting
+
+We use `ruff` for linting and formatting, as well as `pre-commit` to run all
+checks automatically before commits.
+
+To execute `ruff`:
+
+```sh
+ruff check          # Checks formatting and linting rules defined in `pyproject.toml`
+ruff check --fix    # Applies all safe lints
+```
+
+The `pre-commit` hook needs to be installed so it can be run automatically:
 
 ```sh
 pre-commit install
 ```
 
-## Formatting validation (only your changes)
-```sh
-pre-commit run
-```
+In case you want to run `pre-commit` manually:
 
-## Formatting validation (all files)
 ```sh
-pre-commit run --all-files
-```
-
-## Run the linter
-```sh
-ruff check . # From parent folder
+pre-commit run              # Runs just on staged changes
+pre-commit run --all-files  # Runs on every file
 ```

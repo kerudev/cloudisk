@@ -1,13 +1,9 @@
-from argparse import ArgumentParser, Namespace, _SubParsersAction
+import argparse
 from enum import StrEnum, auto
 from pathlib import Path
-from typing import Annotated, Any, Callable, Literal
+from typing import Annotated, Any, Callable, Literal, Type
 
-from pydantic import AfterValidator, BaseModel, Field
-
-from cloudisk.logger import get_logger
-
-logger = get_logger("cloudisk.args")
+from pydantic import BaseModel, Field, field_validator
 
 
 class CommandName(StrEnum):
@@ -18,47 +14,70 @@ class CommandName(StrEnum):
 
 
 class Flag(BaseModel):
-    short: str = Annotated[Field(frozen=True), AfterValidator("_validate_short")]
-    long: str = Annotated[Field(frozen=True), AfterValidator("_validate_long")]
+    short: Annotated[str, Field(freeze=True)]
+    long: Annotated[str, Field(freeze=True)]
     type: object
     help: str = ""
-    required: bool = True
+    action: Type[argparse.Action] = None
+    default: Any = None
 
+    @field_validator("short", mode="before")
     @classmethod
-    def _validate_short(cls, short: str) -> str:
-        if short.replace("-", "") != short:
+    def validate_short(cls, short: str) -> str:
+        if "-" in short:
             raise ValueError("Please provide flags without dashes")
 
         if len(short) > 1:
             raise ValueError("Short flags must be 1 character long")
 
-        return short
+        return "-" + short
 
+    @field_validator("long", mode="before")
     @classmethod
-    def _validate_long(cls, long: str) -> str:
-        if long.replace("-", "") != long:
+    def validate_long(cls, long: str) -> str:
+        if "-" in long:
             raise ValueError("Please provide flags without dashes")
 
         if len(long) < 3:
             raise ValueError("Long flags must be 3 characters long or more")
 
-        return long
+        return "--" + long
+
+    def model_post_init(self, context: Any):
+        if self.type is bool:
+            self.action = argparse.BooleanOptionalAction
 
 
 class RequiredFlag(Flag):
     required: Literal[True] = Field(default=True, frozen=True)
 
     def __init__(self, **data):  # noqa: D107
-        base: Flag = data.pop("base", None)
+        base: Flag
 
-        if base:
-            data.update(base.model_dump())
+        if not (base := data.pop("base", None)):
+            super().__init__(**data)
+            return
 
-        super().__init__(**data)
+        data.update(base.model_dump())
+        flag = RequiredFlag.model_construct(**data)
+
+        object.__setattr__(self, "__dict__", flag.__dict__)
 
 
 class OptionalFlag(Flag):
     required: Literal[False] = Field(default=False, frozen=True)
+
+    def __init__(self, **data):  # noqa: D107
+        base: Flag
+
+        if not (base := data.pop("base", None)):
+            super().__init__(**data)
+            return
+
+        data.update(base.model_dump())
+        flag = OptionalFlag.model_construct(**data)
+
+        object.__setattr__(self, "__dict__", flag.__dict__)
 
 
 class Command(BaseModel):
@@ -66,10 +85,10 @@ class Command(BaseModel):
     help: str
     action: Callable
     flags: list[Flag] = Field(default_factory=list)
-    __parser: ArgumentParser
+    __parser: argparse.ArgumentParser
 
-    def attach(self, parser: _SubParsersAction):
-        self.__parser: ArgumentParser = parser.add_parser(
+    def attach(self, parser: argparse._SubParsersAction):
+        self.__parser: argparse.ArgumentParser = parser.add_parser(
             self.name.value,
             help=self.help,
         )
@@ -91,10 +110,10 @@ class Parser(BaseModel):
     name: str
     description: str
     commands: list[Command]
-    __parser: ArgumentParser
+    __parser: argparse.ArgumentParser
 
     def model_post_init(self, context: Any):  # noqa: D102
-        self.__parser = ArgumentParser(
+        self.__parser = argparse.ArgumentParser(
             prog=self.name,
             description=self.description,
         )
@@ -104,13 +123,13 @@ class Parser(BaseModel):
         for command in self.commands:
             command.attach(subparsers)
 
-    def parse(self) -> Namespace:
+    def parse(self) -> argparse.Namespace:
         return self.__parser.parse_args()
 
     def dispatch(self):
         self.run(self.parse())
 
-    def run(self, arguments: Namespace):
+    def run(self, arguments: argparse.Namespace):
         _args = vars(arguments)
         _command = _args.pop("command")
 
@@ -121,4 +140,4 @@ class Parser(BaseModel):
         raise ValueError(f"There is no command associated to {_command}")
 
 
-PATH_FLAGS = Flag(short="-p", long="--path", type=Path)
+PATH_FLAGS = Flag(short="p", long="path", type=Path)
