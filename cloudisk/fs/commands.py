@@ -20,7 +20,15 @@ def init_cloudisk_folder() -> bool:
     return True
 
 
-def link_path(path: Path):
+def _try_link(src: Path, dst: Path):
+    try:
+        os.symlink(src, dst, target_is_directory=True)
+        logger.info(f"Linked '{src}' -> '{dst}'")
+    except FileExistsError:
+        logger.info(f"Already linked: '{src}'")
+
+
+def link_path(path: Path, recursive: bool = False):
     """
     Create a symlink to `path`.
 
@@ -28,6 +36,9 @@ def link_path(path: Path):
     ----------
     path : Path
         The path to link.
+    recursive : bool = False
+        Whether the link is recursive or not.
+        If `True` and `path` is a directory, it's contents will be liked.
     """
     if not path.exists():
         logger.error(f"'{path}' doesn't exist")
@@ -39,8 +50,12 @@ def link_path(path: Path):
         logger.error(f"'{dst}' already exists")
         return
 
-    os.symlink(path, dst, target_is_directory=True)
-    logger.info(f"Linked '{path}' -> '{dst}'")
+    if not recursive or path.is_file():
+        _try_link(path, dst)
+        return
+
+    for file in os.scandir(path):
+        _try_link(path, CLOUDISK_ROOT / file.name)
 
 
 def unlink_path(path: Path):
