@@ -1,14 +1,21 @@
 import os
+import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.exceptions import HTTPException
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from cloudisk.fs.utils import get_mime_type, is_subpath
+from cloudisk.fs.utils import (
+    attachment_content_disposition,
+    get_mime_type,
+    is_subpath,
+    iter_file_chunks,
+    path_resolve,
+)
 from cloudisk.http.dependencies import validate_path
 from cloudisk.logger import logger
-from cloudisk.vars import CLOUDISK_ROOT, METADATA_FILE
+from cloudisk.vars import CLOUDISK_ROOT, MB_100, METADATA_FILE
 
 EXCLUDED_FILES = [METADATA_FILE]
 
@@ -25,13 +32,16 @@ async def _list_files(path: Path):
         raise HTTPException(400, f"File {path_posix} is not a directory")
 
     try:
-        files = sorted(os.listdir(path))
-        files = [file for file in files if file not in EXCLUDED_FILES]
+        file_list = sorted(
+            path.iterdir(),
+            key=lambda x: (not x.is_dir(), x.name.casefold()),
+        )
+        file_list = [file.name for file in file_list if file.name not in EXCLUDED_FILES]
 
     except Exception as e:
         raise HTTPException(500, f"Error when listing {path_posix} directory: {e}")
 
-    return JSONResponse({"files": files})
+    return JSONResponse({"files": file_list})
 
 
 async def _download_files(path: Path):
@@ -40,6 +50,21 @@ async def _download_files(path: Path):
     except Exception as e:
         logger.warning(f"Could not get mime type for file {path}: {e}")
         return FileResponse(path, filename=path.name)
+
+    if path.stat().st_size > MB_100:
+        content_disposition = attachment_content_disposition(path.name)
+
+        headers = {
+            "content-length": str(path.stat().st_size),
+            "content-disposition": content_disposition,
+        }
+
+        return StreamingResponse(
+            iter_file_chunks(path),
+            206,
+            headers=headers,
+            media_type=content_type,
+        )
 
     return FileResponse(path, filename=path.name, media_type=content_type)
 
@@ -57,7 +82,7 @@ async def _download_files(path: Path):
 async def get_files(request: Request, path: Path = Depends(validate_path)):
     logger.info(f"Request on get_files: query_params - {dict(request.query_params)}")
 
-    storage_path = (CLOUDISK_ROOT / path).resolve()
+    storage_path = path_resolve(CLOUDISK_ROOT / path)
 
     endpoint = _download_files if storage_path.is_file() else _list_files
     response = await endpoint(storage_path)
@@ -87,10 +112,10 @@ async def upload_file(files: list[UploadFile] = File(...)):
             path = path.with_stem(f"{filename.stem}_{i}")
             i += 1
 
-        with open(path, "wb") as f:
-            f.write(await file.read())
+        with open(path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
 
-    return JSONResponse({"message": f"{path.name} uploaded successfully"}, 201)
+    return _list_files(path)
 
 
 @files.delete(

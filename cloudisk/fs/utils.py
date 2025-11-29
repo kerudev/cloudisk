@@ -1,11 +1,12 @@
 import os
 import shutil
 from pathlib import Path
+from urllib.parse import quote
 
 from filetype import guess_mime
 
 from cloudisk.logger import get_logger
-from cloudisk.vars import CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_ROOT, MB_1
 
 logger = get_logger("cloudisk.fs")
 
@@ -20,14 +21,35 @@ def get_mime_type(path: Path) -> str | None:
 
 def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     """Check if child path is subpath of parent_path."""
-    # Normalize child parents paths
-    return parent_path.resolve() in (parent.resolve() for parent in child_path.parents)
+    parent_path = path_resolve(parent_path)
+    child_path = path_resolve(child_path)
+
+    if child_path == parent_path:
+        return False
+
+    return parent_path in child_path.parents
 
 
 def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     """Check if child path is superpath of parent_path."""
-    # Normalize child parents paths
-    return not is_subpath(child_path, parent_path)
+    parent_path = path_resolve(parent_path)
+    child_path = path_resolve(child_path)
+
+    if child_path == parent_path:
+        return False
+
+    return parent_path not in child_path.parents
+
+
+def path_resolve(path: Path) -> Path:
+    if path.is_symlink():
+        return path
+
+    for parent in path.parents:
+        if parent.is_symlink():
+            return path
+
+    return path.resolve()
 
 
 def ask_remove_file(path: Path) -> bool:
@@ -74,3 +96,16 @@ def ask_remove_path(path: Path) -> bool:
         f"{path} already exists and is not a file or a directory. "
         "Please, remove it first."
     )
+
+
+def attachment_content_disposition(file_name: str):
+    if (header_filename := quote(file_name)) != file_name:
+        return f"attachment; filename*=utf-8''{header_filename}"
+    else:
+        return f'attachment; filename="{file_name}"'
+
+
+def iter_file_chunks(path: Path, chunk_size: int = MB_1):
+    with open(path, "rb") as f:
+        while chunk := f.read(chunk_size):
+            yield chunk

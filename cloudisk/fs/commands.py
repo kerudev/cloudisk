@@ -55,7 +55,7 @@ def link_path(path: Path, recursive: bool = False):
         return
 
     for file in os.scandir(path):
-        _try_link(path, CLOUDISK_ROOT / file.name)
+        _try_link(path / file.name, CLOUDISK_ROOT / file.name)
 
 
 def unlink_path(path: Path):
