@@ -1,12 +1,11 @@
 import json
 from datetime import datetime
-from pathlib import Path
 from typing import Any
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
-from cloudisk.fs.commands import init_file_structure
+from cloudisk.fs.commands import init_cloudisk_folder
 from cloudisk.vars import CLOUDISK_ROOT, METADATA_PATH
 
 ENCODING = "utf-8"
@@ -14,7 +13,7 @@ ENSURE_ASCII = False
 
 
 class Metadata(BaseModel):
-    file_uuid: UUID
+    _file_uuid: UUID = PrivateAttr()
 
     version: str = "1.0"
     content_type: str
@@ -34,7 +33,7 @@ class Metadata(BaseModel):
     def model_post_init(self, context: Any) -> None:  # noqa
         now = int(datetime.now().timestamp())
 
-        self.file_uuid = str(uuid4())
+        self._file_uuid = str(uuid4())
 
         self.created_at = now
         self.updated_at = now
