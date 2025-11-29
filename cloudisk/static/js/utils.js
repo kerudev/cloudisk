@@ -64,24 +64,7 @@ export const downloadResponseBlob = async response => {
     const headers = Object.fromEntries(response.headers);
     const name = processContentDisposition(headers["content-disposition"]);
 
-    const reader = response.body.getReader();
-
-    const stream = new ReadableStream({
-        async start(controller) {
-            while (true) {
-                const { done, value } = await reader.read();
-
-                if (done) break;
-
-                controller.enqueue(value);
-            }
-
-            controller.close();
-        },
-    });
-
-    const responseStream = new Response(stream);
-    const blob = await responseStream.blob();
+    const blob = await response.blob();
     const blobUrl = window.URL.createObjectURL(blob);
 
     const downloader = Object.assign(document.createElement("a"), {
@@ -94,18 +77,3 @@ export const downloadResponseBlob = async response => {
     window.URL.revokeObjectURL(blobUrl);
     downloader.remove();
 };
-
-export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-export const streamStart = async (controller) => {
-    while (true) {
-        const { done, value } = await reader.read();
-        await delay(200);
-
-        if (done) break;
-
-        controller.enqueue(value);
-    }
-
-    controller.close();
-}
