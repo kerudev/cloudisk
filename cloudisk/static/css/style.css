@@ -1,6 +1,7 @@
 html, body {
     width: 100%;
     height: 100%;
+    background-color: #181a1b;
 }
 
 ul {
@@ -12,4 +13,13 @@ ul {
 li {
     list-style-type: disc;
     margin-bottom: 8px;
+}
+
+li::marker {
+    color: white;
+}
+
+a {
+    color: #3391ff;
+    font-family: arial, sans-serif;
 }
