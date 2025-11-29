@@ -1,4 +1,5 @@
 import argparse
+import string
 from enum import StrEnum, auto
 from pathlib import Path
 from typing import Annotated, Any, Callable, Literal, Type
@@ -24,41 +25,40 @@ class Flag(BaseModel):
     @field_validator("short", mode="before")
     @classmethod
     def validate_short(cls, short: str) -> str:
-        if "-" in short:
-            raise ValueError("Please provide flags without dashes")
+        tmp = short.removeprefix("-")
 
-        if len(short) > 1:
+        if len(tmp) > 1:
             raise ValueError("Short flags must be 1 character long")
 
-        return "-" + short
+        if tmp not in string.ascii_letters:
+            raise ValueError("Short flags must be an ASCII letter")
+
+        return short
 
     @field_validator("long", mode="before")
     @classmethod
     def validate_long(cls, long: str) -> str:
-        if "-" in long:
-            raise ValueError("Please provide flags without dashes")
+        tmp = long.removeprefix("--")
 
-        if len(long) < 3:
+        if len(tmp) < 3:
             raise ValueError("Long flags must be 3 characters long or more")
 
-        return "--" + long
+        return long
 
     def model_post_init(self, context: Any):
         if self.type is bool:
-            self.action = argparse.BooleanOptionalAction
+            self.action = argparse._StoreTrueAction
 
 
 class RequiredFlag(Flag):
     required: Literal[True] = Field(default=True, frozen=True)
 
-    def __init__(self, **data):  # noqa: D107
-        base: Flag
-
-        if not (base := data.pop("base", None)):
+    def __init__(self, base: Flag = None, **data):  # noqa: D107
+        if not base:
             super().__init__(**data)
             return
 
-        data.update(base.model_dump())
+        data = {**base.model_dump(), **data}
         flag = RequiredFlag.model_construct(**data)
 
         object.__setattr__(self, "__dict__", flag.__dict__)
@@ -67,14 +67,12 @@ class RequiredFlag(Flag):
 class OptionalFlag(Flag):
     required: Literal[False] = Field(default=False, frozen=True)
 
-    def __init__(self, **data):  # noqa: D107
-        base: Flag
-
-        if not (base := data.pop("base", None)):
+    def __init__(self, base: Flag = None, **data):  # noqa: D107
+        if not base:
             super().__init__(**data)
             return
 
-        data.update(base.model_dump())
+        data = {**base.model_dump(), **data}
         flag = OptionalFlag.model_construct(**data)
 
         object.__setattr__(self, "__dict__", flag.__dict__)
@@ -83,7 +81,7 @@ class OptionalFlag(Flag):
 class Command(BaseModel):
     name: CommandName
     help: str
-    action: Callable
+    callable: Callable
     flags: list[Flag] = Field(default_factory=list)
     __parser: argparse.ArgumentParser
 
@@ -100,10 +98,13 @@ class Command(BaseModel):
             model = flag.model_dump()
             flags = (model.pop("short"), model.pop("long"))
 
+            if model.get("type", None) is bool:
+                model.pop("type")
+
             self.__parser.add_argument(*flags, **model)
 
     def run(self, *args, **kwargs):
-        self.action(*args, **kwargs)
+        self.callable(*args, **kwargs)
 
 
 class Parser(BaseModel):
@@ -135,9 +136,10 @@ class Parser(BaseModel):
 
         for command in self.commands:
             if command.name == _command:
-                return command.action(**_args)
+                return command.callable(**_args)
 
         raise ValueError(f"There is no command associated to {_command}")
 
 
-PATH_FLAGS = Flag(short="p", long="path", type=Path)
+PATH_FLAGS = Flag(short="-p", long="--path", type=Path)
+RECURSIVE_FLAG = Flag(short="-r", long="--recursive", type=bool)

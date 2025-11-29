@@ -1,7 +1,9 @@
 from cloudisk.cli.args import (
     PATH_FLAGS,
+    RECURSIVE_FLAG,
     Command,
     CommandName,
+    OptionalFlag,
     Parser,
     RequiredFlag,
 )
@@ -17,20 +19,24 @@ def run():
     init = Command(
         name=CommandName.INIT,
         help=f"Creates the basic configuration to run cloudisk at '{CLOUDISK_ROOT}'",
-        action=init_cloudisk_folder,
+        callable=init_cloudisk_folder,
     )
 
     link = Command(
         name=CommandName.LINK,
         help=f"Creates a symlink inside {CLOUDISK_ROOT}",
-        action=link_path,
+        callable=link_path,
         flags=[
             RequiredFlag(
                 base=PATH_FLAGS,
                 help=(
-                    "If path is a file, creates a symlink to that file."
+                    "If path is a file, creates a symlink to that file. "
                     "If path is a dir, creates a symlink for each file/dir inside itself."
                 ),
+            ),
+            OptionalFlag(
+                base=RECURSIVE_FLAG,
+                help="If specified and path is a directory, it's contents are linked.",
             ),
         ],
     )
@@ -38,7 +44,7 @@ def run():
     unlink = Command(
         name=CommandName.UNLINK,
         help=f"Removes a symlink inside {CLOUDISK_ROOT}",
-        action=unlink_path,
+        callable=unlink_path,
         flags=[
             RequiredFlag(
                 base=PATH_FLAGS,
@@ -49,7 +55,7 @@ def run():
 
     run = Command(
         name=CommandName.RUN,
-        action=server.run,
+        callable=server.run,
         help="Runs the cloudisk server on 0.0.0.0:8000",
     )
 
