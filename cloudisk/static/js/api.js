@@ -12,12 +12,10 @@ export const getFiles = async () => {
 /**
  * Uploads files to the server.
  *
- * @param {DataTransferItemList} items - Files to upload.
+ * @param {File[]} files - Files to upload.
  * @returns {Response} Response received from the backend.
  */
-export const upload = async items => {
-    const files = [...items].filter(item => item.kind === "file").map(file => file.getAsFile());
-
+export const upload = async files => {
     const body = new FormData();
     files.forEach(file => body.append("files", file));
 
@@ -43,10 +41,11 @@ export const download = async path => {
 
     if (response.headers.has("content-disposition")) {
         await downloadResponseBlob(response);
-    } else {
-        const data = await response.json();
-        processFiles(data["files"]);
-
-        history.pushState({ path }, '', `/?${params.toString()}`);
+        return;
     }
+
+    const data = await response.json();
+    processFiles(data["files"]);
+
+    history.pushState({ path }, '', `/?${params.toString()}`);
 }

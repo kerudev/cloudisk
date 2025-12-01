@@ -34,8 +34,7 @@ export const processFiles = files => {
     const ul = document.createElement("ul");
     files.forEach(file => ul.appendChild(newLink(file)));
 
-    const body = document.querySelector("body");
-    body.replaceChildren(ul);
+    document.querySelector("#root").replaceChildren(ul);
 }
 
 /**

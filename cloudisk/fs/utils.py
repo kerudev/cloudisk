@@ -101,8 +101,8 @@ def ask_remove_path(path: Path) -> bool:
 def attachment_content_disposition(file_name: str):
     if (header_filename := quote(file_name)) != file_name:
         return f"attachment; filename*=utf-8''{header_filename}"
-    else:
-        return f'attachment; filename="{file_name}"'
+
+    return f'attachment; filename="{file_name}"'
 
 
 def iter_file_chunks(path: Path, chunk_size: int = MB_1):
