@@ -115,7 +115,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
         with open(path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-    return _list_files(path)
+    return await _list_files(CLOUDISK_ROOT)
 
 
 @files.delete(
