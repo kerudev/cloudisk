@@ -1,12 +1,21 @@
-import { downloadResponseBlob, processFiles } from "./utils.js";
+import { downloadResponseBlob, processFiles, resolvePath } from "./utils.js";
 
 export const getFiles = async () => {
-    const response = await fetch(`/files${window.location.search}`);
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get("path") == "..") {
+        params.delete("path");
+
+        const query = params.size ? "?" + params.toString() : "";
+        history.replaceState(null, "", location.pathname + query);
+    }
+
+    const response = await fetch(`/files${params.toString()}`);
     const data = await response.json();
 
     if (!response.ok) console.error(data.message);
 
-    processFiles(data["files"]);
+    processFiles(data["files"], data["isRoot"]);
 }
 
 /**
@@ -24,20 +33,20 @@ export const upload = async files => {
 
     if (!response.ok) console.error(data.message);
 
-    processFiles(data["files"]);
+    processFiles(data["files"], data["isRoot"]);
 }
 
 export const download = async path => {
-    const current = new URLSearchParams(window.location.search);
-    const search = Object.fromEntries(current.entries());
+    const pathParam = resolvePath(path);
+    const params = pathParam ? { path: pathParam } : null;
 
-    const pathParam = (search?.path)
-        ? search.path + "/" + path
-        : path;
+    const urlParams = new URLSearchParams(params);
 
-    const params = new URLSearchParams({ path: pathParam });
+    const queryParams = params
+        ? `?${urlParams.toString()}`
+        : '';
 
-    const response = await fetch(`/files?${params.toString()}`);
+    const response = await fetch(`/files${queryParams}`);
 
     if (response.headers.has("content-disposition")) {
         await downloadResponseBlob(response);
@@ -45,7 +54,9 @@ export const download = async path => {
     }
 
     const data = await response.json();
-    processFiles(data["files"]);
+    processFiles(data["files"], data["isRoot"]);
 
-    history.pushState({ path }, '', `/?${params.toString()}`);
+    const state = params ? { path } : {};
+    history.pushState(state, '', `/${queryParams}`);
+    history.pushState(state, '', '/' + queryParams);
 }
