@@ -41,7 +41,7 @@ async def _list_files(path: Path):
     except Exception as e:
         raise HTTPException(500, f"Error when listing {path_posix} directory: {e}")
 
-    return JSONResponse({"files": file_list})
+    return JSONResponse({"files": file_list, "isRoot": path == CLOUDISK_ROOT})
 
 
 async def _download_files(path: Path):

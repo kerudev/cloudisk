@@ -29,12 +29,36 @@ export const newLink = path => {
  * `files`, calling `newLink` on each iteration.
  *
  * @param {string[]} files - List of file names.
+ * @param {boolean} isRoot - Defines if the listed directory is the server root.
  */
-export const processFiles = files => {
+export const processFiles = (files, isRoot) => {
     const ul = document.createElement("ul");
     files.forEach(file => ul.appendChild(newLink(file)));
 
+    if (!isRoot) ul.prepend(newLink(".."));
+
     document.querySelector("#root").replaceChildren(ul);
+}
+
+/**
+ * Processes the `path` query param.
+ *
+ * @param {string} path - If it's a regular path, it's appended at the end of
+ * the previous one. If it's `..`, we take a slug out of the previous path.
+ * @returns {string} Resolved path.
+ */
+export const resolvePath = path => {
+    const current = new URLSearchParams(window.location.search);
+    const params = Object.fromEntries(current.entries());
+
+    if (!params?.path) return path;
+
+    if (path != "..") return params.path + "/" + path;
+
+    const splitted = params.path.split("/");
+    if (splitted.length == 1) return "";
+
+    return splitted.slice(0, -1).join("/");
 }
 
 /**
