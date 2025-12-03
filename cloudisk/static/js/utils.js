@@ -18,10 +18,38 @@ export const newLink = path => {
 
     a.addEventListener('click', async () => download(path));
 
+    const trash = document.createElement("span");
+    trash.classList.add("trash-icon");
+
+    trash.addEventListener('click', e => rmLink(e.target.closest("li")));
+
+    fetch("/static/svg/trash.svg")
+        .then(res => res.text())
+        .then(svg => trash.innerHTML = svg);
+
     const li = document.createElement("li");
-    li.appendChild(a);
+    li.replaceChildren(trash, a);
 
     return li;
+};
+
+/**
+ * Removes a link and its associated file on the backend.
+ *
+ * @param {HTMLLIElement} link - A list element.
+ */
+export const rmLink = async link => {
+    const text = link.querySelector("a").textContent;
+    const path = resolvePath(text);
+
+    const response = await fetch(`/files?path=${path}`, { method: "DELETE" });
+
+    if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data["message"]);
+    }
+
+    link.remove();
 };
 
 /**
