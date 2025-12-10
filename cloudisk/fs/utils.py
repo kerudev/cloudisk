@@ -29,7 +29,11 @@ def get_mime_type(path: Path) -> str | None:
     if not path.is_file():
         return None
 
-    return guess_mime(path)
+    try:
+        return guess_mime(path)
+    except Exception as e:
+        logger.warning(f"Could not get mime type for file {path}: {e}")
+        return None
 
 
 def is_subpath(child_path: Path, parent_path: Path = None) -> bool:
