@@ -1,246 +1,99 @@
-import json
 from datetime import datetime
-from typing import Any, Literal
-from uuid import uuid4
+from pathlib import Path
 
-from pydantic import BaseModel, Field, PrivateAttr
+from sqlalchemy import inspect
+from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-from cloudisk.fs.commands import init_cloudisk_folder
-from cloudisk.vars import CLOUDISK_ROOT, METADATA_PATH
-
-ENCODING = "utf-8"
-ENSURE_ASCII = False
+from cloudisk.fs.utils import get_mime_type
+from cloudisk.vars import METADATA_PATH
 
 
-class Metadata(BaseModel):
-    _file_uuid: str = PrivateAttr()
+class Metadata(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
 
-    version: str = "1.0"
-    content_type: str
+    file_path: str
+    file_size: int = 0
+    content_type: str = ""
+
     available: bool = True
 
     created_at: int = 0
     updated_at: int = 0
     deleted_at: int = 0
 
-    file_name: str
-    file_type: str
-    file_path: str
-    file_size: int
-
-    extra: dict[str, Any] = Field(default_factory=dict)
-
-    def model_post_init(self, context: Any) -> None:
-        """Model post init to assign file uuid, created_at and updated_at to object."""
-        now = int(datetime.now().timestamp())
-
-        self._file_uuid = str(uuid4())
-
-        self.created_at = now
-        self.updated_at = now
+    downloads: int = 0
 
 
-# region Private methods
-def _init_metadata_file() -> Literal[True]:
-    """
-    Initialize metadata file if it does not exist.
+class MetadataManager:
+    def __init__(self):  # noqa: D107
+        self.engine = self.get_engine()
 
-    Returns
-    -------
-    Literal[True]
-        True after metadata file is created or checked if already exists.
-    """
-    if not CLOUDISK_ROOT.is_dir():
-        init_cloudisk_folder()
+    @staticmethod
+    def get_engine():
+        return create_engine(f"sqlite:///{METADATA_PATH}")
 
-    if not METADATA_PATH.is_file():
-        with open(METADATA_PATH, "w", encoding=ENCODING) as f:
-            json.dump({}, f, ensure_ascii=ENSURE_ASCII)
+    @property
+    def available_paths(self):
+        engine = MetadataManager.get_engine()
 
-    return True
+        if not inspect(engine).has_table(Metadata.__tablename__):
+            return []
 
+        with Session(engine) as session:
+            statement = select(Metadata.file_path).where(Metadata.available)
+            results = session.exec(statement)
 
-def _save(data: dict) -> None:
-    """
-    Dump data to metadata file.
+            return results.all()
 
-    Parameters
-    ----------
-    data : dict
-        Data to be dumped into metadata file.
-    """
-    with open(METADATA_PATH, "w", encoding=ENCODING) as f:
-        json.dump(data, f, ensure_ascii=ENSURE_ASCII, indent=4)
+    def create(self, path: Path, file_size: int = 0, content_type: str = ""):
+        SQLModel.metadata.create_all(self.engine)
 
+        with Session(self.engine) as session:
+            if inspect(self.engine).has_table(Metadata.__tablename__):
+                # TODO unavailable paths get overwritten
+                paths = self.available_paths
 
-def _load() -> dict:
-    """
-    Load data from metadata file.
+                if path._str in paths:
+                    raise ValueError(f"File with name '{path._str}' already exist")
 
-    Returns
-    -------
-    dict
-        Loaded data or dict with error key if metadata file does not exist.
-    """
-    if not METADATA_PATH.is_file():
-        return {"error": "Metadata file does not exist."}
+            metadata = Metadata(
+                file_path=path._str,
+                file_size=file_size or path.stat().st_size,
+                content_type=content_type or get_mime_type(path),
+            )
 
-    with open(METADATA_PATH, "r", encoding=ENCODING) as f:
-        return json.load(f)
+            now = int(datetime.now().timestamp())
 
+            metadata.created_at = now
+            metadata.updated_at = now
 
-# endregion
+            session.add(metadata)
+            session.commit()
 
+    def remove(self, path: Path):
+        with Session(self.engine) as session:
+            statement = select(Metadata).where(Metadata.file_path == path._str)
+            results = session.exec(statement)
 
-# TODO refector functions to be inside the Metadata model
+            metadata = results.one()
+            metadata.available = False
 
+            now = int(datetime.now().timestamp())
 
-def create_metadata(name: str, metadata: Metadata) -> dict:
-    """
-    Create a metadata as a json file for the recent file created.
+            metadata.updated_at = now
+            metadata.deleted_at = now
 
-    Parameters
-    ----------
-    name : str
-        Name of the file.
-    metadata : Metadata
-        Metadata object.
+            session.add(metadata)
+            session.commit()
 
-    Returns
-    -------
-    dict
-        Either an error or metadata created.
+    def update_downloads(self, path: Path):
+        with Session(self.engine) as session:
+            statement = select(Metadata).where(Metadata.file_path == path._str)
+            results = session.exec(statement)
 
-    Raises
-    ------
-    ValueError
-        If file already exists.
-    """
-    # If folder does not exist, we initialize it
-    if not _init_metadata_file():
-        with open(METADATA_PATH, "w", encoding=ENCODING) as f:
-            json.dump({}, f, ensure_ascii=ENSURE_ASCII)
+            metadata = results.one()
+            metadata.downloads += 1
+            metadata.updated_at = int(datetime.now().timestamp())
 
-    data = _load()
-    if "error" in data:
-        return data
-
-    if name in data:
-        raise ValueError(f"File with name {name} already exist")
-
-    # Adjusts params
-    # Ensure the Pydantic model has the correct file name and a fresh updated_at timestamp
-    metadata_dict = metadata.model_copy(update={"file_name": name}).model_dump()
-
-    # Save file
-    data.update({name: metadata_dict})
-    _save(data)
-    return metadata_dict
-
-
-def read_metadata(name: str) -> dict:
-    """
-    Get metadata of the file selected.
-
-    Parameters
-    ----------
-    name : str
-        Name of the file.
-
-    Returns
-    -------
-    dict
-        Metadata.
-
-    Raises
-    ------
-    KeyError
-        If the metadata file does not exist.
-    """
-    data = _load()
-
-    if name not in data:
-        raise KeyError(f"No metadata file exists for '{name}'")
-
-    # File is active
-    return data[name] if file_exists(data[name]) else {}
-
-
-def file_exists(data: dict) -> bool:
-    """
-    Check from metadata if file exists.
-
-    Parameters
-    ----------
-    data : dict
-        Metadata of the file.
-
-    Returns
-    -------
-    bool
-        True if file exists, False otherwise.
-    """
-    return data.get("available", False)
-
-
-def update_metadata(name: str, **kwargs: Any) -> dict:
-    """
-    Update `extra` fields for the file selected.
-
-    Parameters
-    ----------
-    name : str
-        Name of the file.
-    kwargs : Any
-        Any extra metadata considered important.
-
-    Returns
-    -------
-    dict
-        Updated metadata.
-
-    Raises
-    ------
-    KeyError
-        If the metadata file does not exist.
-    """
-    data = _load()
-    if name not in data:
-        raise KeyError(f"No metadata file exists for '{name}'")
-
-    # Updated keys
-    data[name].setdefault("extra", {}).update(kwargs)
-    data[name]["updated_at"] = int(datetime.now().timestamp())
-
-    # Save data
-    _save(data)
-    return data[name]
-
-
-def delete_metadata(name: str) -> None:
-    """
-    Delete metadata of the selected file.
-
-    Parameters
-    ----------
-    name : str
-        Name of the file.
-    """
-    data = _load()
-    data.pop(name, None)
-
-    _save(data)
-
-
-def list_file_names() -> list[str]:
-    """
-    Get the names of all the files saves in the cloudisk dir.
-
-    Returns
-    -------
-    list[str]
-        Names of the files.
-    """
-    data = _load()
-
-    return list(data)
+            session.add(metadata)
+            session.commit()

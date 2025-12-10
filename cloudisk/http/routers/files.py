@@ -1,10 +1,10 @@
-import os
 import shutil
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
+from cloudisk.fs.metadata import MetadataManager
 from cloudisk.fs.utils import (
     attachment_content_disposition,
     get_mime_type,
@@ -51,16 +51,21 @@ async def _list_files(path: Path) -> JSONResponse:
         raise HTTPException(404, f"{path.as_posix()} path does not exist")
 
     try:
-        file_list = sorted(
+        files = sorted(
             path.iterdir(),
             key=lambda x: (not x.is_dir(), x.name.casefold()),
         )
-        file_list = [file.name for file in file_list if file.name not in EXCLUDED_FILES]
+
+        if available_paths := MetadataManager().available_paths:
+            files = list(filter(lambda file: file._str in available_paths, files))
+
+        files = list(filter(lambda file: file.name not in EXCLUDED_FILES, files))
+        files = [file.name for file in files]
 
     except Exception as e:
         raise HTTPException(500, f"Error when listing {path.as_posix()} directory: {e}")
 
-    return JSONResponse({"files": file_list, "isRoot": path == CLOUDISK_ROOT})
+    return JSONResponse({"files": files, "isRoot": path == CLOUDISK_ROOT})
 
 
 async def _download_files(path: Path) -> FileResponse | StreamingResponse:
@@ -77,11 +82,9 @@ async def _download_files(path: Path) -> FileResponse | StreamingResponse:
     FileResponse | StreamingResponse
         Downloaded file bytes.
     """
-    try:
-        content_type = get_mime_type(path)
-    except Exception as e:
-        logger.warning(f"Could not get mime type for file {path}: {e}")
-        return FileResponse(path, filename=path.name)
+    MetadataManager().update_downloads(path)
+
+    content_type = get_mime_type(path)
 
     if path.stat().st_size <= MB_100:
         return FileResponse(path, filename=path.name, media_type=content_type)
@@ -163,6 +166,8 @@ async def upload_file(files: list[UploadFile] = File(...)):
         with open(path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        MetadataManager().create(path)
+
     return await _list_files(CLOUDISK_ROOT)
 
 
@@ -216,20 +221,9 @@ async def delete_file(
     if not storage_path.exists():
         raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
 
-    if storage_path.is_symlink():
-        storage_path.unlink()
-
-    elif storage_path.is_file():
-        os.remove(storage_path)
-
-    elif storage_path.is_dir():
-        shutil.rmtree(path)
-
-    else:
-        raise HTTPException(
-            400,
-            f"{storage_path.as_posix()} is not a symlink, "
-            "dir or file. It will not be deleted",
-        )
+    try:
+        MetadataManager().remove(storage_path)
+    except Exception as e:
+        raise HTTPException(500, f"{storage_path.as_posix()} could not be deleted: {e}")
 
     return JSONResponse({"message": f"{storage_path.as_posix()} deleted correctly"})
