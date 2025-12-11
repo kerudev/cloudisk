@@ -22,7 +22,29 @@ EXCLUDED_FILES = [METADATA_FILE]
 files = APIRouter(prefix="/files", tags=["files"])
 
 
-async def _list_files(path: Path):
+async def _list_files(path: Path) -> JSONResponse:
+    """
+    List files in the given path.
+
+    Parameters
+    ----------
+    path : Path
+        Path to list files from.
+
+    Returns
+    -------
+    JSONResponse
+        JSONResponse containing files list.
+
+    Raises
+    ------
+    HTTPException - 400
+        If the given path is not a directory.
+    HTTPException - 404
+        If the given path does not exist.
+    HTTPException - 500
+        If an error occurs listing files in the directory.
+    """
     path_posix = path.as_posix()
 
     if not path.exists():
@@ -44,29 +66,42 @@ async def _list_files(path: Path):
     return JSONResponse({"files": file_list, "isRoot": path == CLOUDISK_ROOT})
 
 
-async def _download_files(path: Path):
+async def _download_files(path: Path) -> FileResponse | StreamingResponse:
+    """
+    Download the given file.
+
+    Parameters
+    ----------
+    path : Path
+        File path to be downloaded.
+
+    Returns
+    -------
+    FileResponse | StreamingResponse
+        Downloaded file bytes.
+    """
     try:
         content_type = get_mime_type(path)
     except Exception as e:
         logger.warning(f"Could not get mime type for file {path}: {e}")
         return FileResponse(path, filename=path.name)
 
-    if path.stat().st_size > MB_100:
-        content_disposition = attachment_content_disposition(path.name)
+    if path.stat().st_size <= MB_100:
+        return FileResponse(path, filename=path.name, media_type=content_type)
 
-        headers = {
-            "content-length": str(path.stat().st_size),
-            "content-disposition": content_disposition,
-        }
+    content_disposition = attachment_content_disposition(path.name)
 
-        return StreamingResponse(
-            iter_file_chunks(path),
-            206,
-            headers=headers,
-            media_type=content_type,
-        )
+    headers = {
+        "content-length": str(path.stat().st_size),
+        "content-disposition": content_disposition,
+    }
 
-    return FileResponse(path, filename=path.name, media_type=content_type)
+    return StreamingResponse(
+        iter_file_chunks(path),
+        206,
+        headers=headers,
+        media_type=content_type,
+    )
 
 
 @files.get(
@@ -80,6 +115,16 @@ async def _download_files(path: Path):
     },
 )
 async def get_files(request: Request, path: Path = Depends(validate_path)):
+    """
+    Get files list if path is directory. Else, download file.
+
+    Parameters
+    ----------
+    request : fastapi.Request
+        FastAPI request object.
+    path : Path
+        Path that is being accessed.
+    """
     logger.info(f"Request on get_files: query_params - {dict(request.query_params)}")
 
     storage_path = path_resolve(CLOUDISK_ROOT / path)
@@ -98,8 +143,19 @@ async def get_files(request: Request, path: Path = Depends(validate_path)):
     },
 )
 async def upload_file(files: list[UploadFile] = File(...)):
+    """
+    Upload a file or list of files to the cloudisk root directory.
+
+    Parameters
+    ----------
+    files : list[UploadFile]
+        List of files that are being uploaded.
+    """
     for file in files:
-        filename = Path(file.filename)
+        if (filename := file.filename) is None:
+            continue
+
+        filename = Path(filename)
         # file_type = file.content_type
 
         path = CLOUDISK_ROOT / filename
@@ -135,6 +191,16 @@ async def delete_file(
         description=f"File or dir path to be deleted from {CLOUDISK_ROOT.as_posix()}",
     ),
 ):
+    """
+    Delete a file or directory from the cloudisk root directory.
+
+    Parameters
+    ----------
+    request : fastapi.Request
+        FastAPI request object.
+    path : Path
+        Path to the file or directory to be deleted.
+    """
     logger.info(f"Request on delete_file: query_params - {dict(request.query_params)}")
 
     storage_path = CLOUDISK_ROOT / path

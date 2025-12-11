@@ -28,8 +28,9 @@ app.include_router(files)
 app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="static")
 
 
-# Manage exceptions, to return a JSON
+# Manage unhandled exceptions to return a JSONResponse
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, e: Exception):
+async def general_exception_handler(request: Request, e: Exception) -> JSONResponse:
+    """Exception handler to catch unhandled exceptions."""
     logger.critical(f"Unhandled exception occurred: {e}")
     return JSONResponse({"message": "Internal server error"}, 500)

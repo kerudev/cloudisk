@@ -1,7 +1,7 @@
 import json
 from datetime import datetime
-from typing import Any
-from uuid import UUID, uuid4
+from typing import Any, Literal
+from uuid import uuid4
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -13,7 +13,7 @@ ENSURE_ASCII = False
 
 
 class Metadata(BaseModel):
-    _file_uuid: UUID = PrivateAttr()
+    _file_uuid: str = PrivateAttr()
 
     version: str = "1.0"
     content_type: str
@@ -30,7 +30,8 @@ class Metadata(BaseModel):
 
     extra: dict[str, Any] = Field(default_factory=dict)
 
-    def model_post_init(self, context: Any) -> None:  # noqa
+    def model_post_init(self, context: Any) -> None:
+        """Model post init to assing file uuid, created_at and updated_at to object."""
         now = int(datetime.now().timestamp())
 
         self._file_uuid = str(uuid4())
@@ -40,19 +41,47 @@ class Metadata(BaseModel):
 
 
 # region Private methods
-def _init_metadata_file() -> bool:
+def _init_metadata_file() -> Literal[True]:
+    """
+    Initialize metadata file if it does not exist.
+
+    Returns
+    -------
+    Literal[True]
+        True after metadata file is created or checked if already exists.
+    """
     if not CLOUDISK_ROOT.is_dir():
         init_cloudisk_folder()
 
-    return METADATA_PATH.is_file()
+    if not METADATA_PATH.is_file():
+        with open(METADATA_PATH, "w", encoding=ENCODING) as f:
+            json.dump({}, f, ensure_ascii=ENSURE_ASCII)
+
+    return True
 
 
-def _save(data: dict):
+def _save(data: dict) -> None:
+    """
+    Dump data to metadata file.
+
+    Parameters
+    ----------
+    data : dict
+        Data to be dumped into metadata file.
+    """
     with open(METADATA_PATH, "w", encoding=ENCODING) as f:
         json.dump(data, f, ensure_ascii=ENSURE_ASCII, indent=4)
 
 
 def _load() -> dict:
+    """
+    Load data from metadata file.
+
+    Returns
+    -------
+    dict
+        Loaded data or dict with error key if metadata file does not exist.
+    """
     if not METADATA_PATH.is_file():
         return {"error": "Metadata file does not exist."}
 
@@ -73,19 +102,19 @@ def create_metadata(name: str, metadata: Metadata) -> dict:
     Parameters
     ----------
     name : str
-        Name of the file
+        Name of the file.
     metadata : Metadata
-        Metadata object
+        Metadata object.
 
     Returns
     -------
     dict
-        Either an error or metadata created
+        Either an error or metadata created.
 
     Raises
     ------
     ValueError
-        File already exist
+        If file already exists.
     """
     # If folder does not exist, we initialize it
     if not _init_metadata_file():
@@ -116,17 +145,17 @@ def read_metadata(name: str) -> dict:
     Parameters
     ----------
     name : str
-        Name of the file
+        Name of the file.
 
     Returns
     -------
     dict
-        Metadata
+        Metadata.
 
     Raises
     ------
     KeyError
-        The metadata file does not exist
+        If the metadata file does not exist.
     """
     data = _load()
 
@@ -144,12 +173,12 @@ def file_exists(data: dict) -> bool:
     Parameters
     ----------
     data : dict
-        Metadata of the file
+        Metadata of the file.
 
     Returns
     -------
     bool
-        True if file exists, False otherwise
+        True if file exists, False otherwise.
     """
     return data.get("available", False)
 
@@ -161,19 +190,19 @@ def update_metadata(name: str, **kwargs: Any) -> dict:
     Parameters
     ----------
     name : str
-        Name of the file
+        Name of the file.
     kwargs : Any
-        Any extra metadata considered important
+        Any extra metadata considered important.
 
     Returns
     -------
     dict
-        Updated metadata
+        Updated metadata.
 
     Raises
     ------
     KeyError
-        The metadata file does not exist
+        If the metadata file does not exist.
     """
     data = _load()
     if name not in data:
@@ -188,14 +217,14 @@ def update_metadata(name: str, **kwargs: Any) -> dict:
     return data[name]
 
 
-def delete_metadata(name: str):
+def delete_metadata(name: str) -> None:
     """
     Delete metadata of the selected file.
 
     Parameters
     ----------
     name : str
-        Name of the file
+        Name of the file.
     """
     data = _load()
     data.pop(name, None)
@@ -210,7 +239,7 @@ def list_file_names() -> list[str]:
     Returns
     -------
     list[str]
-        Names of the files
+        Names of the files.
     """
     data = _load()
 
