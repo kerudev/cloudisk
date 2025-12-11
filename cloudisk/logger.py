@@ -1,21 +1,48 @@
 import logging
+from typing import Literal, TypedDict
 
-LOGGER_CONFIG = {
+
+class LoggerConfig(TypedDict):
+    format: str
+    datefmt: str
+    level: Literal[10, 20, 30, 40, 50]
+
+
+DEFAULT_CONFIG: LoggerConfig = {
     "format": "%(asctime)s - %(name)s - [%(levelname)s] - %(message)s",
-    "dt_format": "%Y-%m-%d %H:%M:%S",
-    "level": logging.INFO,
+    "datefmt": "%Y-%m-%d %H:%M:%S",
+    "level": 20,
 }
 
 
-def config_root_logger():
+def config_root_logger(config: LoggerConfig = DEFAULT_CONFIG) -> None:
+    """
+    Apply config to the root logger.
+
+    Parameters
+    ----------
+    config : dict
+        Basic configuration to apply to the root logger.
+    """
     logging.basicConfig(
-        format=LOGGER_CONFIG["format"],
-        datefmt=LOGGER_CONFIG["dt_format"],
-        level=LOGGER_CONFIG["level"],
+        format=config["format"], datefmt=config["datefmt"], level=config["level"]
     )
 
 
-def get_logger(name: str = "cloudisk"):
+def get_logger(name: str = "cloudisk") -> logging.Logger:
+    """
+    Get logger with name parameter.
+
+    Parameters
+    ----------
+    name : str
+        Logger name to be returned.
+
+    Returns
+    -------
+    logging.Logger
+        Created logger with name parameter.
+    """
     logger = logging.getLogger(name)
     return logger
 

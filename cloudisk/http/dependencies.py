@@ -8,8 +8,25 @@ from cloudisk.vars import CLOUDISK_ROOT, METADATA_PATH
 EXCLUDED_PATHS = [METADATA_PATH]
 
 
-async def validate_path(path: Path = Query("")):
-    """Prevents tree traversal (going backwards from the root directory)."""
+async def validate_path(path: Path = Query("")) -> Path:
+    """
+    Prevents tree traversal (going backwards from the root directory).
+
+    Parameters
+    ----------
+    path : Path
+        Path to check if is backwards from the root directory.
+
+    Returns
+    -------
+    pathlib.Path
+        Received path parameter.
+
+    Raises
+    ------
+    HTTPException
+        If given path is backwards from the root directory or in excluded paths.
+    """
     storage_path = path_resolve(CLOUDISK_ROOT / path)
 
     if storage_path == CLOUDISK_ROOT:

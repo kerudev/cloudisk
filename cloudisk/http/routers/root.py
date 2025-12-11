@@ -9,5 +9,6 @@ root = APIRouter(prefix="", tags=["root"])
 
 @root.get("/")
 async def index():
+    """Index route."""
     logger.info("Request on index")
     return FileResponse(CLOUDISK_STATIC / "index.html")
