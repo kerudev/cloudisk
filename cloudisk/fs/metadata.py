@@ -31,7 +31,7 @@ class Metadata(BaseModel):
     extra: dict[str, Any] = Field(default_factory=dict)
 
     def model_post_init(self, context: Any) -> None:
-        """Model post init to assing file uuid, created_at and updated_at to object."""
+        """Model post init to assign file uuid, created_at and updated_at to object."""
         now = int(datetime.now().timestamp())
 
         self._file_uuid = str(uuid4())
