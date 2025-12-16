@@ -166,7 +166,11 @@ async def upload_file(files: list[UploadFile] = File(...)):
         with open(path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
-        MetadataManager().create(path)
+        try:
+            MetadataManager().create(path)
+        except Exception as e:
+            # TODO return the names of the files that failed to upload
+            logger.error(f"There was an error while uploading {path}: {e}")
 
     return await _list_files(CLOUDISK_ROOT)
 
