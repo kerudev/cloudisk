@@ -4,6 +4,7 @@ from pathlib import Path
 from sqlalchemy import inspect
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
+from cloudisk import logger
 from cloudisk.fs.utils import get_mime_type
 from cloudisk.vars import METADATA_PATH
 
@@ -75,7 +76,10 @@ class MetadataManager:
             statement = select(Metadata).where(Metadata.file_path == path._str)
             results = session.exec(statement)
 
-            metadata = results.one()
+            if not (metadata := results.first()):
+                logger.error("Error on remove")
+                return
+
             metadata.available = False
 
             now = int(datetime.now().timestamp())
@@ -91,7 +95,10 @@ class MetadataManager:
             statement = select(Metadata).where(Metadata.file_path == path._str)
             results = session.exec(statement)
 
-            metadata = results.one()
+            if not (metadata := results.first()):
+                logger.error("Error on update_downloads")
+                return
+
             metadata.downloads += 1
             metadata.updated_at = int(datetime.now().timestamp())
 
