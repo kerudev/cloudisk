@@ -200,6 +200,17 @@ async def delete_file(
         FastAPI request object.
     path : Path
         Path to the file or directory to be deleted.
+
+    Raises
+    ------
+    HTTPException - 400
+        If the given path is not a directory or a file.
+    HTTPException - 403
+        If the given path is not a permitted path.
+    HTTPException - 404
+        If the given path does not exist.
+    HTTPException - 500
+        If an error occurs deleting the file or directory.
     """
     logger.info(f"Request on delete_file: query_params - {dict(request.query_params)}")
 
