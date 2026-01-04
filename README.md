@@ -1,5 +1,8 @@
 # cloudisk
 
+[![Coverage Status](https://coveralls.io/repos/github/kerudev/cloudisk/badge.svg?branch=main)](https://coveralls.io/github/kerudev/cloudisk?branch=main)
+[![Build Status](https://github.com/kerudev/cloudisk/workflows/CI/badge.svg)](https://github.com/kerudev/cloudisk/actions)
+
 A decentralized content distribution system. Run your own cloud.
 
 ## Dependencies
