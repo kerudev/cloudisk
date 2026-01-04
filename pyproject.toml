@@ -22,10 +22,14 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pre-commit>=4.4.0",
+    "ruff>=0.14.3",
+]
+
+test = [
+    "coverage>=7.11.0",
     "pytest>=8.4.2",
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
-    "ruff>=0.14.3",
 ]
 
 [tool.pytest.ini_options]
