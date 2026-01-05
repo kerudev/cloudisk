@@ -1,5 +1,4 @@
 import os
-import socket
 from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 from urllib.parse import quote
@@ -183,18 +182,14 @@ def test_remove_path_when_path(tmp_path: Path, mock_path_rmdir: MagicMock):
 
 
 def test_remove_path_raises_exception(tmp_path: Path):
-    socket_path = tmp_path / "tmp_socket.sock"
+    fake_path = tmp_path / "tmp_socket.sock"
     exception_text = (
-        f"{socket_path} already exists and is not a file or a directory. "
+        f"{fake_path} already exists and is not a file or a directory. "
         "Please, remove it first."
     )
 
-    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-    s.bind(socket_path.as_posix())
-    _ = s.makefile("rwb")
-
     with pytest.raises(Exception, match=exception_text) as exc_info:
-        assert ask_remove_path(socket_path) == exc_info
+        assert ask_remove_path(fake_path) == exc_info
 
 
 def test_attachment_content_disposition_returns_file_name():
