@@ -22,8 +22,8 @@ logger = get_logger("cloudisk.api")
 app = FastAPI(**API_CONFIG)
 
 # Include routers in app
-app.include_router(root)
-app.include_router(files)
+app.include_router(root.router)
+app.include_router(files.router)
 
 app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="static")
 
