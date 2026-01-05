@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Iterator
 from urllib.parse import quote
 
 from filetype import guess_mime
@@ -219,7 +219,7 @@ def attachment_content_disposition(file_name: str) -> str:
     return f'attachment; filename="{file_name}"'
 
 
-def iter_file_chunks(path: Path, chunk_size: int = MB_1) -> Generator[bytes]:
+def iter_file_chunks(path: Path, chunk_size: int = MB_1) -> Iterator[bytes]:
     """
     Iterate over file content chunks.
 
@@ -232,7 +232,7 @@ def iter_file_chunks(path: Path, chunk_size: int = MB_1) -> Generator[bytes]:
 
     Yields
     ------
-    Generator[bytes]
+    Iterator[bytes]
         Chunked content bytes.
     """
     with open(path, "rb") as f:
