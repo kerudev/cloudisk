@@ -4,10 +4,10 @@ from fastapi.responses import FileResponse
 from cloudisk.logger import logger
 from cloudisk.vars import CLOUDISK_STATIC
 
-root = APIRouter(prefix="", tags=["root"])
+router = APIRouter(prefix="", tags=["root"])
 
 
-@root.get("/")
+@router.get("/")
 async def index():
     """Index route."""
     logger.info("Request on index")

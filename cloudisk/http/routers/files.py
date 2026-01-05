@@ -19,7 +19,7 @@ from cloudisk.vars import CLOUDISK_ROOT, MB_100, METADATA_FILE
 
 EXCLUDED_FILES = [METADATA_FILE]
 
-files = APIRouter(prefix="/files", tags=["files"])
+router = APIRouter(prefix="/files", tags=["files"])
 
 
 async def _list_files(path: Path) -> JSONResponse:
@@ -104,7 +104,7 @@ async def _download_files(path: Path) -> FileResponse | StreamingResponse:
     )
 
 
-@files.get(
+@router.get(
     "",
     responses={
         200: {"description": "List of files or specific file."},
@@ -135,7 +135,7 @@ async def get_files(request: Request, path: Path = Depends(validate_path)):
     return response
 
 
-@files.post(
+@router.post(
     "",
     responses={
         201: {"description": "List of files or specific file."},
@@ -174,7 +174,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
     return await _list_files(CLOUDISK_ROOT)
 
 
-@files.delete(
+@router.delete(
     "",
     responses={
         200: {"description": "path deleted correctly."},
