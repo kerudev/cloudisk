@@ -2,8 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
-from fastapi.exceptions import HTTPException
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from cloudisk.fs.utils import (
@@ -217,24 +216,20 @@ async def delete_file(
     if not storage_path.exists():
         raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
 
-    try:
-        if storage_path.is_symlink():
-            storage_path.unlink()
+    if storage_path.is_symlink():
+        storage_path.unlink()
 
-        elif storage_path.is_file():
-            os.remove(storage_path)
+    elif storage_path.is_file():
+        os.remove(storage_path)
 
-        elif storage_path.is_dir():
-            shutil.rmtree(path)
+    elif storage_path.is_dir():
+        shutil.rmtree(path)
 
-        else:
-            raise HTTPException(
-                400,
-                f"{storage_path.as_posix()} is not a symlink, "
-                "dir or file. It will not be deleted",
-            )
-
-    except Exception as e:
-        raise HTTPException(500, f"{storage_path.as_posix()} could not be deleted: {e}")
+    else:
+        raise HTTPException(
+            400,
+            f"{storage_path.as_posix()} is not a symlink, "
+            "dir or file. It will not be deleted",
+        )
 
     return JSONResponse({"message": f"{storage_path.as_posix()} deleted correctly"})
