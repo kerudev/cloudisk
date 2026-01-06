@@ -282,17 +282,21 @@ def test_delete_file_err_404_path_doesnt_exist(fake_root):
     assert content["detail"] == f"File at {path} not found"
 
 
-# def test_delete_file_err_400_not_deleted(fake_root, monkeypatch):
-#     path = fake_root / "block"
+def test_delete_file_err_400_not_deleted(fake_root):
+    path = fake_root / "block"
 
-#     monkeypatch.setattr(path, "is_symlink", lambda: False)
-#     monkeypatch.setattr(path, "is_file", lambda: False)
-#     monkeypatch.setattr(path, "is_dir", lambda: False)
+    with (
+        patch.object(type(path), "exists", return_value=True),
+        patch.object(type(path), "is_symlink", return_value=False),
+        patch.object(type(path), "is_file", return_value=False),
+        patch.object(type(path), "is_dir", return_value=False),
+    ):
+        response = client.delete("/files", params={"path": path})
 
-#     response = client.delete("/files", params={"path": path})
+    assert response.status_code == 400
+    assert not path.exists()
 
-#     assert response.status_code == 400
-#     assert not path.exists()
+    expected_detail = f"{path} is not a symlink, dir or file. It will not be deleted"
 
-#     content = response.json()
-#     assert content["detail"] == f"{path} deleted correctly"
+    content = response.json()
+    assert content["detail"] == expected_detail
