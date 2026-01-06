@@ -32,7 +32,7 @@ def get_mime_type(path: Path) -> str | None:
     return guess_mime(path)
 
 
-def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
+def is_subpath(child_path: Path, parent_path: Path = None) -> bool:
     """
     Check if child path is subpath of parent_path.
 
@@ -41,7 +41,7 @@ def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     child_path : Path
         Child path to check if it is a subpath.
     parent_path : Path, optional
-        Parent path to check if child_path is subpath of it. By default, CLOUDISK_ROOT.
+        Parent path to check if child_path is subpath of it.
 
     Returns
     -------
@@ -49,7 +49,7 @@ def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
         True if child path is subpath of parent path.
         False otherwise or if both paths are the same.
     """
-    parent_path = path_resolve(parent_path)
+    parent_path = path_resolve(parent_path or CLOUDISK_ROOT)
     child_path = path_resolve(child_path)
 
     if child_path == parent_path:
@@ -58,7 +58,7 @@ def is_subpath(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     return parent_path in child_path.parents
 
 
-def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
+def is_parent_path(child_path: Path, parent_path: Path = None) -> bool:
     """
     Check if child path is superpath of parent_path.
 
@@ -67,7 +67,7 @@ def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
     child_path : Path
         Child path to check if parent_path is superpath of it.
     parent_path : Path, optional
-        Parent path to check if it is a superpath. By default, CLOUDISK_ROOT.
+        Parent path to check if it is a superpath.
 
     Returns
     -------
@@ -75,7 +75,7 @@ def is_parent_path(child_path: Path, parent_path: Path = CLOUDISK_ROOT) -> bool:
         True if parent path is a superpath of child path.
         False otherwise or if both paths are the same.
     """
-    parent_path = path_resolve(parent_path)
+    parent_path = path_resolve(parent_path or CLOUDISK_ROOT)
     child_path = path_resolve(child_path)
 
     if child_path == parent_path:

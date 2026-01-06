@@ -24,12 +24,15 @@ router = APIRouter(prefix="/files", tags=["files"])
 
 async def _list_files(path: Path) -> JSONResponse:
     """
-    List files in the given path.
+    List files in the given path. This is not expected to be called directly,
+    but through `get_files`.
 
     Parameters
     ----------
     path : Path
-        Path to list files from.
+        The directory to list files from. This is expected to be a directory,
+        as it doesn't make sense to list files inside a file. If `path` is a
+        file, an exception will be raised.
 
     Returns
     -------
@@ -45,13 +48,8 @@ async def _list_files(path: Path) -> JSONResponse:
     HTTPException - 500
         If an error occurs listing files in the directory.
     """
-    path_posix = path.as_posix()
-
     if not path.exists():
-        raise HTTPException(404, f"{path_posix} path does not exist")
-
-    if not path.is_dir():
-        raise HTTPException(400, f"File {path_posix} is not a directory")
+        raise HTTPException(404, f"{path.as_posix()} path does not exist")
 
     try:
         file_list = sorted(
@@ -61,7 +59,7 @@ async def _list_files(path: Path) -> JSONResponse:
         file_list = [file.name for file in file_list if file.name not in EXCLUDED_FILES]
 
     except Exception as e:
-        raise HTTPException(500, f"Error when listing {path_posix} directory: {e}")
+        raise HTTPException(500, f"Error when listing {path.as_posix()} directory: {e}")
 
     return JSONResponse({"files": file_list, "isRoot": path == CLOUDISK_ROOT})
 
@@ -152,12 +150,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
         List of files that are being uploaded.
     """
     for file in files:
-        if (filename := file.filename) is None:
-            continue
-
-        filename = Path(filename)
-        # file_type = file.content_type
-
+        filename = Path(file.filename)
         path = CLOUDISK_ROOT / filename
 
         if not is_subpath(path):
@@ -216,29 +209,32 @@ async def delete_file(
 
     storage_path = CLOUDISK_ROOT / path
 
-    storage_path_posix = storage_path.as_posix()
+    if not is_subpath(storage_path):
+        raise HTTPException(
+            403, f"You are not allowed to delete {storage_path.as_posix()}"
+        )
 
     if not storage_path.exists():
-        raise HTTPException(404, f"File at {storage_path_posix} not found")
-
-    if not is_subpath(storage_path):
-        raise HTTPException(403, f"You are not allowed to delete {storage_path_posix}")
+        raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
 
     try:
         if storage_path.is_symlink():
             storage_path.unlink()
 
-        elif storage_path.is_dir() or storage_path.is_file():
+        elif storage_path.is_file():
             os.remove(storage_path)
+
+        elif storage_path.is_dir():
+            shutil.rmtree(path)
 
         else:
             raise HTTPException(
                 400,
-                f"{storage_path_posix} is not a symlink, "
+                f"{storage_path.as_posix()} is not a symlink, "
                 "dir or file. It will not be deleted",
             )
 
     except Exception as e:
-        raise HTTPException(500, f"{storage_path_posix} could not be deleted: {e}")
+        raise HTTPException(500, f"{storage_path.as_posix()} could not be deleted: {e}")
 
-    return JSONResponse({"message": f"{storage_path_posix} deleted correctly"})
+    return JSONResponse({"message": f"{storage_path.as_posix()} deleted correctly"})
