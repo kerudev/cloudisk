@@ -1,3 +1,4 @@
+import os
 import shutil
 from pathlib import Path
 
@@ -57,7 +58,7 @@ async def _list_files(path: Path) -> JSONResponse:
         )
 
         if available_paths := MetadataManager().available_paths:
-            files = list(filter(lambda file: file._str in available_paths, files))
+            files = list(filter(lambda file: str(file) in available_paths, files))
 
         files = list(filter(lambda file: file.name not in EXCLUDED_FILES, files))
         files = [file.name for file in files]
@@ -171,6 +172,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
         except Exception as e:
             # TODO return the names of the files that failed to upload
             logger.error(f"There was an error while uploading {path}: {e}")
+            os.remove(path)
 
     return await _list_files(CLOUDISK_ROOT)
 
