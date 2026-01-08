@@ -70,6 +70,16 @@ def test_get_mime_type_from_path_returns_None(tmp_path: Path):
     assert result == expected
 
 
+def test_get_mime_type_guess_mime_fails_returns_None():
+    fake_path = MagicMock()
+    fake_path.is_file.return_value = True
+
+    with patch.object(utils, "guess_mime", side_effect=Exception):
+        result = get_mime_type(fake_path)
+
+    assert result is None
+
+
 def test_is_subpath_is_True(tmp_path: Path):
     previous_path = (tmp_path / "..").resolve()
     assert is_subpath(tmp_path, previous_path) is True
