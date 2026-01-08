@@ -8,7 +8,7 @@ from cloudisk.vars import CLOUDISK_ROOT
 logger = get_logger("cloudisk.fs")
 
 
-def init_cloudisk_folder() -> bool:
+def init_cloudisk_root() -> bool:
     """
     Initialize cloudisk folder and handle if it already exists.
 

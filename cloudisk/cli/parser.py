@@ -7,7 +7,7 @@ from cloudisk.cli.args import (
     Parser,
     RequiredFlag,
 )
-from cloudisk.fs.commands import init_cloudisk_folder, link_path, unlink_path
+from cloudisk.fs.commands import init_cloudisk_root, link_path, unlink_path
 from cloudisk.http import server
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_ROOT
@@ -19,7 +19,7 @@ def run():
     init = Command(
         name=CommandName.INIT,
         help=f"Creates the basic configuration to run cloudisk at '{CLOUDISK_ROOT}'",
-        callable=init_cloudisk_folder,
+        callable=init_cloudisk_root,
     )
 
     link = Command(
