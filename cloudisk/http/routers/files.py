@@ -83,7 +83,7 @@ async def _download_files(path: Path) -> FileResponse | StreamingResponse:
     FileResponse | StreamingResponse
         Downloaded file bytes.
     """
-    MetadataManager().update_downloads(path)
+    MetadataManager().increment_downloads(path)
 
     content_type = get_mime_type(path)
 
