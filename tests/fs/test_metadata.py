@@ -1,209 +1,142 @@
-# from copy import deepcopy
-# from unittest.mock import patch
+from pathlib import Path
 
-# import pytest
+import pytest
 
-# from cloudisk.fs import metadata
-# from cloudisk.fs.metadata import Metadata
+from cloudisk.fs.metadata import Metadata, MetadataManager
+from cloudisk.vars import METADATA_FILE
 
 
-# @pytest.fixture
-# def fake_metadata():
-#     with patch.object(metadata, "uuid4") as mock_uuid:
-#         mock_uuid.return_value = "123e4567-e89b-12d3-a456-426655440000"
+@pytest.fixture(autouse=True)
+def fake_db(tmp_path, monkeypatch):
+    tmp_db = tmp_path / METADATA_FILE
 
-#         instance = Metadata(
-#             content_type="text/plain",
-#             file_path="/some/path/test.txt",
-#             file_size=1234,
-#         )
+    monkeypatch.setattr("cloudisk.fs.metadata.METADATA_PATH", tmp_db)
 
-#         yield instance, mock_uuid
+    return tmp_db
 
 
-# @pytest.fixture
-# def fake_content():
-#     return {"available": True, "bar": "baz"}
+@pytest.fixture(autouse=True)
+def fake_root(tmp_path, monkeypatch):
+    file1 = tmp_path / "file1.txt"
+    file1.write_text("Test 1")
 
+    file2 = tmp_path / "file2.fake"
+    file2.write_text("Test 2")
 
-# def test_create_metadata(fake_content, fake_metadata):
-#     with (
-#         patch.object(metadata, "_init_metadata_file") as mock_init,
-#         patch.object(metadata, "_load") as mock_load,
-#         patch.object(metadata, "_save", wraps=metadata._save) as mock_save,
-#     ):
-#         instance, mock_uuid = fake_metadata
-#         mock_init.return_value = True
-#         mock_load.return_value = {"foo": fake_content}
+    link1 = tmp_path / "link1.txt"
+    link1.symlink_to(tmp_path / "file1.txt")
 
-#         result = create_metadata("bar", instance)
+    dir1 = tmp_path / "dir1"
+    dir1.mkdir()
 
-#     instance.file_name = "bar"
-#     mock_save.assert_called_once_with({"foo": fake_content, "bar": dict(instance)})
+    dir1_file1 = dir1 / "dir1_file1.txt"
+    dir1_file1.write_text("Test Dir1 1")
 
-#     assert result == dict(instance)
+    dir1_file2 = dir1 / "dir1_file2.txt"
+    dir1_file2.write_text("Test Dir1 2")
 
+    monkeypatch.setattr("cloudisk.fs.utils.CLOUDISK_ROOT", tmp_path)
 
-# def test_create_metadata_raises_ValueError(fake_content, fake_metadata):
-#     with (
-#         patch.object(metadata, "_init_metadata_file") as mock_init,
-#         patch.object(metadata, "_load") as mock_load,
-#     ):
-#         mock_init.return_value = True
-#         mock_load.return_value = {"foo": fake_content}
+    file_list = [
+        file1,
+        file2,
+        link1,
+        dir1,
+        dir1_file1,
+        dir1_file2,
+    ]
 
-#         with pytest.raises(ValueError):
-#             create_metadata("foo", fake_metadata)
+    manager = MetadataManager()
 
+    for file in file_list:
+        manager.create(file)
 
-# def test_read_metadata_is_available(fake_content):
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": fake_content}
+    return tmp_path
 
-#         result = read_metadata("foo")
 
-#     assert result == fake_content
+def test__init__(fake_db):
+    manager = MetadataManager()
 
+    assert str(manager.engine.url) == f"sqlite:///{fake_db}"
+    assert manager.model == Metadata
 
-# def test_read_metadata_is_not_available(fake_content):
-#     fake_content["available"] = False
 
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": fake_content}
+def test_get_engine(fake_db):
+    engine = MetadataManager.get_engine()
 
-#         result = read_metadata("foo")
+    assert str(engine.url) == f"sqlite:///{fake_db}"
 
-#     assert result == {}
 
+def test_available_paths_table_exists(fake_root):
+    paths = MetadataManager().available_paths
 
-# def test_read_metadata_raises_KeyError():
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": "bar"}
+    expected_paths = [
+        fake_root / "file1.txt",
+        fake_root / "file2.fake",
+        fake_root / "link1.txt",
+        fake_root / "dir1",
+        fake_root / "dir1" / "dir1_file1.txt",
+        fake_root / "dir1" / "dir1_file2.txt",
+    ]
 
-#         with pytest.raises(KeyError):
-#             read_metadata("baz")
+    for path in paths:
+        assert Path(path) in expected_paths
 
 
-# def test_file_exists_returns_True():
-#     assert file_exists({"available": True}) is True
+def test_available_paths_table_doesnt_exist():
+    manager = MetadataManager()
+    manager.model.__table__.drop(manager.engine)
 
+    paths = manager.available_paths
 
-# def test_file_exists_returns_False():
-#     assert file_exists({"available": False}) is False
+    assert paths == []
 
 
-# def test_file_exists_returns_False_without_key():
-#     assert file_exists({}) is False
+def test_select(fake_root):
+    path = fake_root / "file1.txt"
 
+    metadata = MetadataManager().select(path)
 
-# def test_update_metadata_no_kwargs(fake_content):
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": fake_content}
+    assert metadata.path == str(path)
+    assert metadata.size == path.stat().st_size
+    assert metadata.content_type == ""
 
-#         result = update_metadata("foo")
 
-#     assert result == fake_content
+def test_create_ok(fake_root):
+    path = fake_root / "new1.txt"
+    path.write_text("Content")
 
+    metadata = MetadataManager().create(path)
 
-# def test_update_metadata_with_kwargs(fake_content):
-#     data = fake_content
-#     data["extra"] = {"part": 1}
+    assert metadata.path == str(path)
+    assert metadata.size == path.stat().st_size
+    assert metadata.content_type == ""
 
-#     extra = {"author": "test", "description": "..."}
 
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": fake_content}
+def test_create_err_non_unique_path(fake_root):
+    path = fake_root / "file1.txt"
+    metadata = MetadataManager().create(path)
 
-#         result = update_metadata("foo", **extra)
+    assert metadata is None
 
-#     expected = deepcopy(data)
-#     expected["extra"].update(extra)
 
-#     assert result == expected
+def test_remove(fake_root):
+    manager = MetadataManager()
+    path = fake_root / "file1.txt"
 
+    manager.remove(path)
 
-# def test_update_metadata_creates_extra(fake_content):
-#     extra = {"author": "test", "description": "..."}
+    metadata = manager.select(path)
 
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": fake_content}
+    assert metadata.available is False
 
-#         result = update_metadata("foo", **extra)
 
-#     expected = deepcopy(fake_content)
-#     expected["extra"] = extra
+def test_increment_downloads(fake_root):
+    manager = MetadataManager()
+    path = fake_root / "file1.txt"
 
-#     assert result == expected
+    manager.increment_downloads(path)
 
+    metadata = manager.select(path)
 
-# def test_update_metadata_raises_KeyError():
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {"foo": "bar"}
-
-#         with pytest.raises(KeyError):
-#             update_metadata("baz")
-
-
-# def test_delete_metadata():
-#     with (
-#         patch.object(metadata, "_load") as mock_load,
-#         patch.object(metadata, "_save", wraps=metadata._save) as mock_save,
-#     ):
-#         mock_load.return_value = {"foo": "bar", "baz": "qux"}
-
-#         delete_metadata("baz")
-
-#     mock_save.assert_called_once_with({"foo": "bar"})
-
-
-# def test_delete_metadata_removes_all_keys():
-#     with (
-#         patch.object(metadata, "_load") as mock_load,
-#         patch.object(metadata, "_save", wraps=metadata._save) as mock_save,
-#     ):
-#         mock_load.return_value = {"foo": "bar"}
-#         delete_metadata("foo")
-
-#     mock_save.assert_called_once_with({})
-
-
-# def test_delete_metadata_key_doesnt_exist():
-#     with (
-#         patch.object(metadata, "_load") as mock_load,
-#         patch.object(metadata, "_save", wraps=metadata._save) as mock_save,
-#     ):
-#         mock_load.return_value = {"foo": "bar"}
-#         delete_metadata("baz")
-
-#     mock_save.assert_called_once_with({"foo": "bar"})
-
-
-# def test_delete_metadata_loads_no_data():
-#     with (
-#         patch.object(metadata, "_load") as mock_load,
-#         patch.object(metadata, "_save", wraps=metadata._save) as mock_save,
-#     ):
-#         mock_load.return_value = {}
-#         delete_metadata("foo")
-
-#     mock_save.assert_called_once_with({})
-
-
-# def test_list_file_names():
-#     data = {"foo": "bar"}
-
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = data
-
-#         result = list_file_names()
-
-#     assert result == list(data)
-
-
-# def test_list_file_names_empty():
-#     with patch.object(metadata, "_load") as mock_load:
-#         mock_load.return_value = {}
-
-#         result = list_file_names()
-
-#     assert result == []
+    assert metadata.downloads == 1

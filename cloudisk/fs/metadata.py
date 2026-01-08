@@ -1,19 +1,20 @@
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import inspect
+from sqlalchemy import Engine, inspect
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, create_engine, select
 
-from cloudisk import logger
 from cloudisk.fs.utils import get_mime_type
+from cloudisk.logger import logger
 from cloudisk.vars import METADATA_PATH
 
 
 class Metadata(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
-    file_path: str
-    file_size: int = 0
+    path: str = Field(unique=True)
+    size: int = 0
     content_type: str = ""
 
     available: bool = True
@@ -26,79 +27,147 @@ class Metadata(SQLModel, table=True):
 
 
 class MetadataManager:
-    def __init__(self):  # noqa: D107
+    def __init__(self) -> None:  # noqa: D107
         self.engine = self.get_engine()
+        self.model = Metadata
 
     @staticmethod
-    def get_engine():
+    def get_engine() -> Engine:
+        """
+        Create an SQLite `Engine`.
+
+        Returns
+        -------
+        Engine
+            The engine used to run operations on the SQLite database.
+        """
         return create_engine(f"sqlite:///{METADATA_PATH}")
 
     @property
-    def available_paths(self):
-        engine = MetadataManager.get_engine()
+    def available_paths(self) -> list[str]:
+        """
+        Return the rows where `available` is `True`.
 
-        if not inspect(engine).has_table(Metadata.__tablename__):
+        Returns
+        -------
+        list[str]
+            Paths where `available` is `True`.
+        """
+        if not inspect(self.engine).has_table(self.model.__tablename__):
+            # TODO create metadata objects for each file inside root
             return []
 
-        with Session(engine) as session:
-            statement = select(Metadata.file_path).where(Metadata.available)
+        with Session(self.engine) as session:
+            statement = select(self.model.path).where(self.model.available)
             results = session.exec(statement)
 
             return results.all()
 
-    def create(self, path: Path, file_size: int = 0, content_type: str = ""):
+    def select(self, path: Path) -> Metadata:
+        """
+        Select the row where `self.model.path` equals `path`.
+
+        Returns
+        -------
+        Metadata
+            The selected instance.
+        """
+        with Session(self.engine) as session:
+            statement = select(self.model).where(self.model.path == str(path))
+            results = session.exec(statement)
+
+            return results.first()
+
+    def create(self, path: Path) -> Metadata:
+        """
+        Create a `Metadata` instance.
+
+        Parameters
+        ----------
+        path: Path
+            The path to update.
+
+        Returns
+        -------
+        Metadata
+            The created instance.
+        """
         SQLModel.metadata.create_all(self.engine)
 
+        path_str = str(path)
+
         with Session(self.engine) as session:
-            if inspect(self.engine).has_table(Metadata.__tablename__):
-                # TODO unavailable paths get overwritten
-                paths = self.available_paths
-
-                if path._str in paths:
-                    raise ValueError(f"File with name '{path._str}' already exist")
-
-            metadata = Metadata(
-                file_path=path._str,
-                file_size=file_size or path.stat().st_size,
-                content_type=content_type or get_mime_type(path),
+            metadata = self.model(
+                path=path_str,
+                size=path.stat().st_size,
+                content_type=get_mime_type(path),
             )
 
             now = int(datetime.now().timestamp())
-
             metadata.created_at = now
             metadata.updated_at = now
 
             session.add(metadata)
-            session.commit()
 
-    def remove(self, path: Path):
+            try:
+                session.commit()
+            except IntegrityError:
+                logger.error(f"Path '{path_str}' already exist")
+                return None
+
+            session.refresh(metadata)
+
+            return metadata
+
+    def select_or_create_path(self, path: Path) -> Metadata:
+        """
+        Return a `Metadata` instance or create it if it doesn't exist.
+
+        Parameters
+        ----------
+        path: Path
+            Path to select or create.
+
+        Returns
+        -------
+        Metadata
+            The selected or created path.
+        """
+        return self.select(path) or self.create(path)
+
+    def remove(self, path: Path) -> None:
+        """
+        Mark `available` as `False`, but doesn't delete the row, then updates
+        the `updated_at` and `deleted_at` with the current timestamp.
+
+        Parameters
+        ----------
+        path: Path
+            The path to update.
+        """
         with Session(self.engine) as session:
-            statement = select(Metadata).where(Metadata.file_path == path._str)
-            results = session.exec(statement)
-
-            if not (metadata := results.first()):
-                logger.error("Error on remove")
-                return
-
+            metadata = self.select_or_create_path(path)
             metadata.available = False
 
             now = int(datetime.now().timestamp())
-
             metadata.updated_at = now
             metadata.deleted_at = now
 
             session.add(metadata)
             session.commit()
 
-    def update_downloads(self, path: Path):
+    def increment_downloads(self, path: Path) -> None:
+        """
+        Increments `downloads` by 1, then updates the `updated_at` with the
+        current timestamp.
+
+        Parameters
+        ----------
+        path: Path
+            The path to update.
+        """
         with Session(self.engine) as session:
-            statement = select(Metadata).where(Metadata.file_path == path._str)
-            results = session.exec(statement)
-
-            if not (metadata := results.first()):
-                logger.error("Error on update_downloads")
-                return
-
+            metadata = self.select_or_create_path(path)
             metadata.downloads += 1
             metadata.updated_at = int(datetime.now().timestamp())
 
