@@ -25,7 +25,7 @@ jobs:
         run: uv sync --group test
 
       - name: Run coverage
-        run: pytest --cov=. --cov-report=term-missing --cov-report=xml  # generates coverage.xml
+        run: uv run pytest --cov=. --cov-report=term-missing --cov-report=xml  # generates coverage.xml
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
