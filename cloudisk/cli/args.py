@@ -15,8 +15,8 @@ class CommandName(StrEnum):
 
 
 class Flag(BaseModel):
-    short: Annotated[str, Field(freeze=True)]
-    long: Annotated[str, Field(freeze=True)]
+    short: Annotated[str, Field(json_schema_extra={"freeze": True})]
+    long: Annotated[str, Field(json_schema_extra={"freeze": True})]
     type: object
     help: str = ""
     action: Type[argparse.Action] = None
