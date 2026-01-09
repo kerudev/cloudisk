@@ -19,3 +19,4 @@ __pycache__/
 *.sqlite3
 *.egg-info
 .coverage
+coverage.xml
