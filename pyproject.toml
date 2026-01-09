@@ -32,6 +32,21 @@ dev = [
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 
+[tool.coverage.run]
+branch = true
+omit = [
+    "__init__.py",
+    "__main__.py",
+    "static/*",
+    "tests/*",
+    "cloudisk/cli/*",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+fail_under = 90
+
 [tool.ruff]
 line-length = 90
 target-version = "py311"
