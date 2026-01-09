@@ -1,7 +1,7 @@
 # cloudisk
 
 [![Coverage Status](https://coveralls.io/repos/github/kerudev/cloudisk/badge.svg?branch=main)](https://coveralls.io/github/kerudev/cloudisk?branch=main)
-[![Build Status](https://github.com/kerudev/cloudisk/workflows/CI/badge.svg)](https://github.com/kerudev/cloudisk/actions)
+[![Build Status](https://github.com/kerudev/cloudisk/workflows/Lint/badge.svg)](https://github.com/kerudev/cloudisk/actions)
 
 A decentralized content distribution system. Run your own cloud.
 
@@ -50,4 +50,15 @@ In case you want to run `pre-commit` manually:
 ```sh
 pre-commit run              # Runs just on staged changes
 pre-commit run --all-files  # Runs on every file
+```
+
+## Testing
+
+We use `pytest` to run out test suite and also upload our coverage to Coveralls
+using `pytest-cov`.
+
+To install the test dependencies:
+
+```sh
+uv sync --group test
 ```
