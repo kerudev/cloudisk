@@ -7,7 +7,8 @@ name = "cloudisk"
 version = "0.1.0"
 description = "A decentralized content distribution system. Run your own cloud."
 readme = "README.md"
-license = { text = "" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 scripts.cloudisk = "cloudisk:main"
 dependencies = [
