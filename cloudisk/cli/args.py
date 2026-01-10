@@ -1,17 +1,17 @@
 import argparse
 import string
-from enum import StrEnum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Any, Callable, Literal, Type
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class CommandName(StrEnum):
-    INIT = auto()
-    LINK = auto()
-    UNLINK = auto()
-    RUN = auto()
+class CommandName(str, Enum):
+    INIT = "init"
+    LINK = "link"
+    UNLINK = "unlink"
+    RUN = "run"
 
 
 class Flag(BaseModel):
