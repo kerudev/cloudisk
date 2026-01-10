@@ -2,63 +2,29 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/kerudev/cloudisk/badge.svg?branch=main)](https://coveralls.io/github/kerudev/cloudisk?branch=main)
 [![Build Status](https://github.com/kerudev/cloudisk/workflows/Lint/badge.svg)](https://github.com/kerudev/cloudisk/actions)
+[![PyPI - Version](https://img.shields.io/pypi/v/cloudisk?label=version)](https://pypi.org/project/cloudisk/)
+[![PyPI - Python](https://img.shields.io/pypi/pyversions/cloudisk?label=python)](https://pypi.org/project/cloudisk/)
+
+> [!WARNING]
+> This library is still on a pre-alpha state.
+> Keep your eyes open for future releases!
 
 A decentralized content distribution system. Run your own cloud.
 
-## Dependencies
+## The idea
 
-Tools:
-- Python >= 3.11
-- uv >= 0.9.9
+cloudisk is born from the need of a simple server to share pictures and videos
+with friends that doesn't depend on file size or device storage.
 
-## Install dependencies
+We decided to program our own, kind of like CLI `Jellyfin`, where we can add
+the features we need: an intuitive and private cloud that is easy to use and
+easy to develop.
 
-Quickstart with the following scripts:
+## Getting started
 
-```sh
-./scripts/init.sh   // bash
-./scripts/init.ps1  // powershell
-./scripts/init.bat  // cmd
-```
+To install cloudisk, use `pip install cloudisk`.
 
-To install the dependencies in `pyproject.toml`, run:
+After installing, you can run `cloudisk -h` to get the full commands list and
+a their description. Use `cloudisk <command> -h` to get help about their flags.
 
-```sh
-uv sync
-```
-
-## Linting and formatting
-
-We use `ruff` for linting and formatting, as well as `pre-commit` to run all
-checks automatically before commits.
-
-To execute `ruff`:
-
-```sh
-ruff check          # Checks formatting and linting rules defined in `pyproject.toml`
-ruff check --fix    # Applies all safe lints
-```
-
-The `pre-commit` hook needs to be installed so it can be run automatically:
-
-```sh
-pre-commit install
-```
-
-In case you want to run `pre-commit` manually:
-
-```sh
-pre-commit run              # Runs just on staged changes
-pre-commit run --all-files  # Runs on every file
-```
-
-## Testing
-
-We use `pytest` to run out test suite and also upload our coverage to Coveralls
-using `pytest-cov`.
-
-To install the test dependencies:
-
-```sh
-uv sync --group test
-```
+Use `cloudisk run` to start the web server at `127.0.0.1:8000`.
