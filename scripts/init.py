@@ -5,8 +5,7 @@ INFO = "\x1b[34mINFO\x1b[0m"
 
 commands = [
     ("pipx install uv", "Installing uv"),
-    ("uv sync", "Installing dependencies"),
-    ("uv sync --group test", "Installing test dependencies"),
+    ("uv sync --group test", "Installing dependencies (regular, dev and test)"),
     ("pre-commit install", "Installing pre-commit hook"),
 ]
 

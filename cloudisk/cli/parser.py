@@ -24,7 +24,7 @@ def run():
 
     link = Command(
         name=CommandName.LINK,
-        help=f"Creates a symlink inside {CLOUDISK_ROOT}",
+        help=f"Creates a symlink inside '{CLOUDISK_ROOT}'",
         callable=link_path,
         flags=[
             RequiredFlag(
@@ -43,7 +43,7 @@ def run():
 
     unlink = Command(
         name=CommandName.UNLINK,
-        help=f"Removes a symlink inside {CLOUDISK_ROOT}",
+        help=f"Removes a symlink inside '{CLOUDISK_ROOT}'",
         callable=unlink_path,
         flags=[
             RequiredFlag(
