@@ -47,6 +47,11 @@ test = [
     "pytest-cov>=7.0.0",
 ]
 
+build = [
+    "twine>=6.2.0",
+    "build>=1.4.0",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
@@ -84,3 +89,6 @@ ignore = ["D100", "D101", "D102", "D103", "D203", "D205","D212", "D413", "N802"]
 
 [tool.ruff.lint.isort]
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
+[tool.setuptools.packages.find]
+include = ["cloudisk*"]
