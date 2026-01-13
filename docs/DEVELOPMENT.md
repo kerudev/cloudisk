@@ -14,7 +14,7 @@ versions and virtual envs.
 Quickstart with the following scripts:
 
 ```sh
-python ./scripts/init.sh   # Works on all OS
+python ./scripts/init.py   # Works on all OS
 ```
 
 To install the dependencies in `pyproject.toml`, run:
