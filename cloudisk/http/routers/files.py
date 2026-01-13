@@ -57,9 +57,9 @@ async def _list_files(path: Path) -> JSONResponse:
             key=lambda x: (not x.is_dir(), x.name.casefold()),
         )
 
-        if available_paths := MetadataManager().available_paths:
-            files = list(filter(lambda file: str(file) in available_paths, files))
+        available_paths = MetadataManager().available_paths
 
+        files = list(filter(lambda file: str(file) in available_paths, files))
         files = list(filter(lambda file: file.name not in EXCLUDED_FILES, files))
         files = [file.name for file in files]
 

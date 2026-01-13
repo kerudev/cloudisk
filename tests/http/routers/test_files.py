@@ -111,7 +111,7 @@ def test_get_files_ok_with_unavailable_path(
 
     assert response.status_code == 200
     assert response.json() == {
-        "files": ["dir1", "file1.txt", "file2.fake", "link1.txt"],
+        "files": [],
         "isRoot": True,
     }
 
