@@ -1,3 +1,3 @@
-from cloudisk.cli import main
+from cloudisk import main
 
 main()
