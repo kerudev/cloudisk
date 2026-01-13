@@ -8,16 +8,19 @@
 .venv
 env/
 venv/
+.python-version
 
 # caches
 __pycache__/
 .pytest_cache/
 .ruff_cache
 
-# Artifacts
-*.log
-*.sqlite3
+# Build artifacts
+dist/
 *.egg-info
+*.log
+
+# Coverage artifacts
+*.sqlite3
 .coverage
 coverage.xml
-.python-version
