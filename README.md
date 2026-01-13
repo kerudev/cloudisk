@@ -28,3 +28,9 @@ After installing, you can run `cloudisk -h` to get the full commands list and
 a their description. Use `cloudisk <command> -h` to get help about their flags.
 
 Use `cloudisk run` to start the web server at `127.0.0.1:8000`.
+
+## Environment variables
+
+The following env vars are used by cloudisk:
+
+- `CLOUDISK_STATIC`: the path of the static files that will be served.
