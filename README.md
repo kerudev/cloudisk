@@ -2,8 +2,9 @@
 
 [![Coverage Status](https://coveralls.io/repos/github/kerudev/cloudisk/badge.svg?branch=main)](https://coveralls.io/github/kerudev/cloudisk?branch=main)
 [![Build Status](https://github.com/kerudev/cloudisk/workflows/Lint/badge.svg)](https://github.com/kerudev/cloudisk/actions)
-[![PyPI - Version](https://img.shields.io/pypi/v/cloudisk?label=version)](https://pypi.org/project/cloudisk/)
-[![PyPI - Python](https://img.shields.io/pypi/pyversions/cloudisk?label=python)](https://pypi.org/project/cloudisk/)
+[![PyPI - Version](https://img.shields.io/pypi/v/cloudisk)](https://pypi.org/project/cloudisk/)
+[![PyPI - Python](https://img.shields.io/pypi/pyversions/cloudisk)](https://pypi.org/project/cloudisk/)
+
 
 > [!WARNING]
 > This library is still on a pre-alpha state.
