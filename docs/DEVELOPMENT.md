@@ -55,3 +55,12 @@ We use `pytest` to run out test suite and also upload our coverage to Coveralls
 using `pytest-cov`.
 
 You can check the current coverage [here](https://coveralls.io/github/kerudev/cloudisk?branch=main).
+
+## Uploading to PyPI
+
+To upload to PyPI, you'll need to activate your virtual env, then run:
+
+```sh
+python scripts/upload.py --test  # Upload project to TestPyPI (optional)
+python scripts/upload.py         # Upload project to PyPI
+```
