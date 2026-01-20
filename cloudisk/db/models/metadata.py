@@ -10,7 +10,7 @@ from cloudisk.logger import logger
 from cloudisk.vars import METADATA_PATH
 
 
-class Metadata(SQLModel, table=True):
+class MetadataModel(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
 
     path: str = Field(unique=True)
@@ -26,10 +26,10 @@ class Metadata(SQLModel, table=True):
     downloads: int = 0
 
 
-class MetadataManager:
+class Metadata:
     def __init__(self) -> None:  # noqa: D107
         self.engine = self.get_engine()
-        self.model = Metadata
+        self.model = MetadataModel
 
     @staticmethod
     def get_engine() -> Engine:
@@ -63,13 +63,13 @@ class MetadataManager:
 
             return results.all()
 
-    def select(self, path: Path) -> Metadata:
+    def select(self, path: Path) -> MetadataModel:
         """
         Select the row where `self.model.path` equals `path`.
 
         Returns
         -------
-        Metadata
+        MetadataModel
             The selected instance.
         """
         with Session(self.engine) as session:
@@ -78,9 +78,9 @@ class MetadataManager:
 
             return results.first()
 
-    def create(self, path: Path) -> Metadata:
+    def create(self, path: Path) -> MetadataModel:
         """
-        Create a `Metadata` instance.
+        Create a `MetadataModel` instance.
 
         Parameters
         ----------
@@ -89,7 +89,7 @@ class MetadataManager:
 
         Returns
         -------
-        Metadata
+        MetadataModel
             The created instance.
         """
         SQLModel.metadata.create_all(self.engine)
@@ -119,9 +119,9 @@ class MetadataManager:
 
             return metadata
 
-    def select_or_create_path(self, path: Path) -> Metadata:
+    def select_or_create_path(self, path: Path) -> MetadataModel:
         """
-        Return a `Metadata` instance or create it if it doesn't exist.
+        Return a `MetadataModel` instance or create it if it doesn't exist.
 
         Parameters
         ----------
@@ -130,7 +130,7 @@ class MetadataManager:
 
         Returns
         -------
-        Metadata
+        MetadataModel
             The selected or created path.
         """
         return self.select(path) or self.create(path)
