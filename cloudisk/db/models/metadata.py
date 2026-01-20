@@ -7,7 +7,7 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 
 from cloudisk.fs.utils import get_mime_type
 from cloudisk.logger import logger
-from cloudisk.vars import METADATA_PATH
+from cloudisk.vars import CLOUDISK_DB_PATH
 
 
 class MetadataModel(SQLModel, table=True):
@@ -41,7 +41,7 @@ class Metadata:
         Engine
             The engine used to run operations on the SQLite database.
         """
-        return create_engine(f"sqlite:///{METADATA_PATH}")
+        return create_engine(f"sqlite:///{CLOUDISK_DB_PATH}")
 
     @property
     def available_paths(self) -> list[str]:

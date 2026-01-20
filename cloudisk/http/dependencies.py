@@ -3,9 +3,9 @@ from pathlib import Path
 from fastapi import HTTPException, Query
 
 from cloudisk.fs.utils import is_parent_path, path_resolve
-from cloudisk.vars import CLOUDISK_ROOT, METADATA_PATH
+from cloudisk.vars import CLOUDISK_DB_PATH, CLOUDISK_ROOT
 
-EXCLUDED_PATHS = [METADATA_PATH]
+EXCLUDED_PATHS = [CLOUDISK_DB_PATH]
 
 
 async def validate_path(path: Path = Query("")) -> Path:
