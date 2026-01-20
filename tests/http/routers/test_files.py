@@ -8,17 +8,17 @@ from cloudisk.db.models import Metadata
 from cloudisk.http.config import app
 from cloudisk.http.routers import files
 from cloudisk.http.routers.files import _download_files, _list_files
-from cloudisk.vars import MB_1, METADATA_FILE
+from cloudisk.vars import CLOUDISK_DB_FILE, MB_1
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
 def fake_metadata(tmp_path, monkeypatch):
-    tmp_db = tmp_path / METADATA_FILE
+    tmp_db = tmp_path / CLOUDISK_DB_FILE
 
-    monkeypatch.setattr("cloudisk.db.models.metadata.METADATA_PATH", tmp_db)
-    monkeypatch.setattr("cloudisk.http.dependencies.METADATA_PATH", tmp_db)
+    monkeypatch.setattr("cloudisk.db.models.metadata.CLOUDISK_DB_PATH", tmp_db)
+    monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_DB_PATH", tmp_db)
 
     return Metadata()
 

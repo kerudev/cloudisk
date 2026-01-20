@@ -15,9 +15,9 @@ from cloudisk.fs.utils import (
 )
 from cloudisk.http.dependencies import validate_path
 from cloudisk.logger import logger
-from cloudisk.vars import CLOUDISK_ROOT, MB_100, METADATA_FILE
+from cloudisk.vars import CLOUDISK_DB_FILE, CLOUDISK_ROOT, MB_100
 
-EXCLUDED_FILES = [METADATA_FILE]
+EXCLUDED_FILES = [CLOUDISK_DB_FILE]
 
 router = APIRouter(prefix="/files", tags=["files"])
 
