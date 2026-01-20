@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
-from cloudisk.db.models.metadata import MetadataManager
+from cloudisk.db.models import Metadata
 from cloudisk.http.config import app
 from cloudisk.http.routers import files
 from cloudisk.http.routers.files import _download_files, _list_files
@@ -20,7 +20,7 @@ def fake_metadata(tmp_path, monkeypatch):
     monkeypatch.setattr("cloudisk.db.models.metadata.METADATA_PATH", tmp_db)
     monkeypatch.setattr("cloudisk.http.dependencies.METADATA_PATH", tmp_db)
 
-    return MetadataManager()
+    return Metadata()
 
 
 @pytest.fixture(autouse=True)

@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from cloudisk.db.models.metadata import Metadata, MetadataManager
+from cloudisk.db.models.metadata import Metadata, MetadataModel
 from cloudisk.vars import METADATA_FILE
 
 
@@ -46,7 +46,7 @@ def fake_root(tmp_path, monkeypatch):
         dir1_file2,
     ]
 
-    manager = MetadataManager()
+    manager = Metadata()
 
     for file in file_list:
         manager.create(file)
@@ -55,20 +55,20 @@ def fake_root(tmp_path, monkeypatch):
 
 
 def test__init__(fake_db):
-    manager = MetadataManager()
+    manager = Metadata()
 
     assert str(manager.engine.url) == f"sqlite:///{fake_db}"
-    assert manager.model == Metadata
+    assert manager.model == MetadataModel
 
 
 def test_get_engine(fake_db):
-    engine = MetadataManager.get_engine()
+    engine = Metadata.get_engine()
 
     assert str(engine.url) == f"sqlite:///{fake_db}"
 
 
 def test_available_paths_table_exists(fake_root):
-    paths = MetadataManager().available_paths
+    paths = Metadata().available_paths
 
     expected_paths = [
         fake_root / "file1.txt",
@@ -84,7 +84,7 @@ def test_available_paths_table_exists(fake_root):
 
 
 def test_available_paths_table_doesnt_exist():
-    manager = MetadataManager()
+    manager = Metadata()
     manager.model.__table__.drop(manager.engine)
 
     paths = manager.available_paths
@@ -95,7 +95,7 @@ def test_available_paths_table_doesnt_exist():
 def test_select(fake_root):
     path = fake_root / "file1.txt"
 
-    metadata = MetadataManager().select(path)
+    metadata = Metadata().select(path)
 
     assert metadata.path == str(path)
     assert metadata.size == path.stat().st_size
@@ -106,7 +106,7 @@ def test_create_ok(fake_root):
     path = fake_root / "new1.txt"
     path.write_text("Content")
 
-    metadata = MetadataManager().create(path)
+    metadata = Metadata().create(path)
 
     assert metadata.path == str(path)
     assert metadata.size == path.stat().st_size
@@ -115,13 +115,13 @@ def test_create_ok(fake_root):
 
 def test_create_err_non_unique_path(fake_root):
     path = fake_root / "file1.txt"
-    metadata = MetadataManager().create(path)
+    metadata = Metadata().create(path)
 
     assert metadata is None
 
 
 def test_remove(fake_root):
-    manager = MetadataManager()
+    manager = Metadata()
     path = fake_root / "file1.txt"
 
     manager.remove(path)
@@ -132,7 +132,7 @@ def test_remove(fake_root):
 
 
 def test_increment_downloads(fake_root):
-    manager = MetadataManager()
+    manager = Metadata()
     path = fake_root / "file1.txt"
 
     manager.increment_downloads(path)

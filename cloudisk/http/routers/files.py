@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from cloudisk.db.models.metadata import MetadataManager
+from cloudisk.db.models import Metadata
 from cloudisk.fs.utils import (
     attachment_content_disposition,
     get_mime_type,
@@ -57,7 +57,7 @@ async def _list_files(path: Path) -> JSONResponse:
             key=lambda x: (not x.is_dir(), x.name.casefold()),
         )
 
-        available_paths = MetadataManager().available_paths
+        available_paths = Metadata().available_paths
 
         files = list(filter(lambda file: str(file) in available_paths, files))
         files = list(filter(lambda file: file.name not in EXCLUDED_FILES, files))
@@ -83,7 +83,7 @@ async def _download_files(path: Path) -> FileResponse | StreamingResponse:
     FileResponse | StreamingResponse
         Downloaded file bytes.
     """
-    MetadataManager().increment_downloads(path)
+    Metadata().increment_downloads(path)
 
     content_type = get_mime_type(path)
 
@@ -168,7 +168,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
             shutil.copyfileobj(file.file, buffer)
 
         try:
-            MetadataManager().create(path)
+            Metadata().create(path)
         except Exception as e:
             # TODO return the names of the files that failed to upload
             logger.error(f"There was an error while uploading {path}: {e}")
@@ -228,7 +228,7 @@ async def delete_file(
         raise HTTPException(404, f"File at {storage_path.as_posix()} not found")
 
     try:
-        MetadataManager().remove(storage_path)
+        Metadata().remove(storage_path)
     except Exception as e:
         raise HTTPException(500, f"{storage_path.as_posix()} could not be deleted: {e}")
 
