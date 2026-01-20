@@ -5,7 +5,7 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
-from cloudisk.fs.metadata import MetadataManager
+from cloudisk.db.models.metadata import MetadataManager
 from cloudisk.fs.utils import (
     attachment_content_disposition,
     get_mime_type,

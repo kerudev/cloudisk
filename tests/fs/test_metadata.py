@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from cloudisk.fs.metadata import Metadata, MetadataManager
+from cloudisk.db.models.metadata import Metadata, MetadataManager
 from cloudisk.vars import METADATA_FILE
 
 
@@ -10,7 +10,7 @@ from cloudisk.vars import METADATA_FILE
 def fake_db(tmp_path, monkeypatch):
     tmp_db = tmp_path / METADATA_FILE
 
-    monkeypatch.setattr("cloudisk.fs.metadata.METADATA_PATH", tmp_db)
+    monkeypatch.setattr("cloudisk.db.models.metadata.METADATA_PATH", tmp_db)
 
     return tmp_db
 
