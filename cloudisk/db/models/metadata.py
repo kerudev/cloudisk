@@ -1,13 +1,12 @@
 from datetime import datetime
 from pathlib import Path
 
-from sqlalchemy import Engine, inspect
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Field, Session, SQLModel, create_engine, select
+from sqlmodel import Field, Session, SQLModel, select
 
+from cloudisk.db.models.base import ModelManager
 from cloudisk.fs.utils import get_mime_type
 from cloudisk.logger import logger
-from cloudisk.vars import CLOUDISK_DB_PATH
 
 
 class MetadataModel(SQLModel, table=True):
@@ -26,22 +25,9 @@ class MetadataModel(SQLModel, table=True):
     downloads: int = 0
 
 
-class Metadata:
+class Metadata(ModelManager[MetadataModel]):
     def __init__(self) -> None:  # noqa: D107
-        self.engine = self.get_engine()
-        self.model = MetadataModel
-
-    @staticmethod
-    def get_engine() -> Engine:
-        """
-        Create an SQLite `Engine`.
-
-        Returns
-        -------
-        Engine
-            The engine used to run operations on the SQLite database.
-        """
-        return create_engine(f"sqlite:///{CLOUDISK_DB_PATH}")
+        super().__init__(MetadataModel)
 
     @property
     def available_paths(self) -> list[str]:
@@ -53,7 +39,7 @@ class Metadata:
         list[str]
             Paths where `available` is `True`.
         """
-        if not inspect(self.engine).has_table(self.model.__tablename__):
+        if not self.table_exists():
             # TODO create metadata objects for each file inside root
             return []
 
@@ -97,15 +83,15 @@ class Metadata:
         path_str = str(path)
 
         with Session(self.engine) as session:
+            now = int(datetime.now().timestamp())
+
             metadata = self.model(
                 path=path_str,
                 size=path.stat().st_size,
                 content_type=get_mime_type(path),
+                created_at=now,
+                updated_at=now,
             )
-
-            now = int(datetime.now().timestamp())
-            metadata.created_at = now
-            metadata.updated_at = now
 
             session.add(metadata)
 
