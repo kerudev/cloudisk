@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, select
@@ -10,7 +11,7 @@ from cloudisk.logger import logger
 
 
 class MetadataModel(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
+    id: int | None = Field(None, primary_key=True)
 
     path: str = Field(unique=True)
     size: int = 0
@@ -25,9 +26,8 @@ class MetadataModel(SQLModel, table=True):
     downloads: int = 0
 
 
-class Metadata(ModelManager[MetadataModel]):
-    def __init__(self) -> None:  # noqa: D107
-        super().__init__(MetadataModel)
+class Metadata(ModelManager):
+    model = MetadataModel
 
     @property
     def available_paths(self) -> list[str]:
@@ -64,7 +64,7 @@ class Metadata(ModelManager[MetadataModel]):
 
             return results.first()
 
-    def create(self, path: Path) -> MetadataModel:
+    def create(self, path: Path) -> Optional[MetadataModel]:
         """
         Create a `MetadataModel` instance.
 
