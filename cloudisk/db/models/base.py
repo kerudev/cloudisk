@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar
+from typing import TypeVar
 
 from sqlalchemy import Engine, create_engine, inspect
 from sqlmodel import SQLModel
@@ -38,9 +38,10 @@ class AbstractManager(ABC):
     #     ...
 
 
-class ModelManager(AbstractManager, Generic[T]):
-    def __init__(self, model: T) -> None:  # noqa: D107
-        self.model = model
+class ModelManager(AbstractManager):
+    model: type[T]
+
+    def __init__(self) -> None:  # noqa: D107
         self.engine = self.get_engine()
 
     # Abstract
