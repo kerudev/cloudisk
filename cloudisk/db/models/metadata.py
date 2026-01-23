@@ -7,21 +7,22 @@ from sqlmodel import Field, Session, SQLModel, select
 
 from cloudisk.db.models.base import ModelManager
 from cloudisk.fs.utils import get_mime_type
-from cloudisk.logger import logger
 
 
 class MetadataModel(SQLModel, table=True):
-    id: int | None = Field(None, primary_key=True)
+    __tablename__ = "metadata"
+
+    id: int = Field(primary_key=True)
 
     path: str = Field(unique=True)
     size: int = 0
-    content_type: str = ""
+    content_type: Optional[str] = None
 
     available: bool = True
 
-    created_at: int = 0
-    updated_at: int = 0
-    deleted_at: int = 0
+    created_at: Optional[datetime] = Field(None, nullable=True)
+    updated_at: Optional[datetime] = Field(None, nullable=True)
+    deleted_at: Optional[datetime] = Field(None, nullable=True)
 
     downloads: int = 0
 
@@ -64,7 +65,7 @@ class Metadata(ModelManager):
 
             return results.first()
 
-    def create(self, path: Path) -> Optional[MetadataModel]:
+    def create(self, path: Path) -> MetadataModel:
         """
         Create a `MetadataModel` instance.
 
@@ -77,13 +78,16 @@ class Metadata(ModelManager):
         -------
         MetadataModel
             The created instance.
-        """
-        SQLModel.metadata.create_all(self.engine)
 
+        Raises
+        ------
+        Exception
+            When a path is already registered.
+        """
         path_str = str(path)
 
         with Session(self.engine) as session:
-            now = int(datetime.now().timestamp())
+            now = datetime.now()
 
             metadata = self.model(
                 path=path_str,
@@ -98,8 +102,7 @@ class Metadata(ModelManager):
             try:
                 session.commit()
             except IntegrityError:
-                logger.error(f"Path '{path_str}' already exist")
-                return None
+                raise Exception(f"Path '{path_str}' already exist")
 
             session.refresh(metadata)
 
@@ -132,10 +135,10 @@ class Metadata(ModelManager):
             The path to update.
         """
         with Session(self.engine) as session:
+            now = datetime.now()
+
             metadata = self.select_or_create_path(path)
             metadata.available = False
-
-            now = int(datetime.now().timestamp())
             metadata.updated_at = now
             metadata.deleted_at = now
 
@@ -155,7 +158,7 @@ class Metadata(ModelManager):
         with Session(self.engine) as session:
             metadata = self.select_or_create_path(path)
             metadata.downloads += 1
-            metadata.updated_at = int(datetime.now().timestamp())
+            metadata.updated_at = datetime.now()
 
             session.add(metadata)
             session.commit()
