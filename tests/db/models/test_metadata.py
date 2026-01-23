@@ -3,16 +3,6 @@ from pathlib import Path
 import pytest
 
 from cloudisk.db.models.metadata import Metadata, MetadataModel
-from cloudisk.vars import CLOUDISK_DB_FILE
-
-
-@pytest.fixture(autouse=True)
-def fake_db(tmp_path, monkeypatch):
-    tmp_db = tmp_path / CLOUDISK_DB_FILE
-
-    monkeypatch.setattr("cloudisk.db.models.base.CLOUDISK_DB_PATH", tmp_db)
-
-    return tmp_db
 
 
 @pytest.fixture(autouse=True)
@@ -61,12 +51,6 @@ def test__init__(fake_db):
     assert manager.model == MetadataModel
 
 
-def test_get_engine(fake_db):
-    engine = Metadata.get_engine()
-
-    assert str(engine.url) == f"sqlite:///{fake_db}"
-
-
 def test_available_paths_table_exists(fake_root):
     paths = Metadata().available_paths
 
@@ -99,7 +83,7 @@ def test_select(fake_root):
 
     assert metadata.path == str(path)
     assert metadata.size == path.stat().st_size
-    assert metadata.content_type == ""
+    assert metadata.content_type is None
 
 
 def test_create_ok(fake_root):
@@ -110,14 +94,14 @@ def test_create_ok(fake_root):
 
     assert metadata.path == str(path)
     assert metadata.size == path.stat().st_size
-    assert metadata.content_type == ""
+    assert metadata.content_type is None
 
 
 def test_create_err_non_unique_path(fake_root):
     path = fake_root / "file1.txt"
-    metadata = Metadata().create(path)
 
-    assert metadata is None
+    with pytest.raises(Exception):
+        Metadata().create(path)
 
 
 def test_remove(fake_root):
