@@ -39,10 +39,12 @@ class AbstractManager(ABC):
 
 
 class ModelManager(AbstractManager):
-    model: type[T]
+    model: T
 
     def __init__(self) -> None:  # noqa: D107
         self.engine = self.get_engine()
+
+        SQLModel.metadata.create_all(self.engine)
 
     # Abstract
 
