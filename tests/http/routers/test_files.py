@@ -8,23 +8,13 @@ from cloudisk.db.models import Metadata
 from cloudisk.http.config import app
 from cloudisk.http.routers import files
 from cloudisk.http.routers.files import _download_files, _list_files
-from cloudisk.vars import CLOUDISK_DB_FILE, MB_1
+from cloudisk.vars import MB_1
 
 client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def fake_metadata(tmp_path, monkeypatch):
-    tmp_db = tmp_path / CLOUDISK_DB_FILE
-
-    monkeypatch.setattr("cloudisk.db.models.base.CLOUDISK_DB_PATH", tmp_db)
-    monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_DB_PATH", tmp_db)
-
-    return Metadata()
-
-
-@pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch, fake_metadata):
+def fake_root(tmp_path, monkeypatch):
     file1 = tmp_path / "file1.txt"
     file1.write_text("Test 1")
 
@@ -55,6 +45,8 @@ def fake_root(tmp_path, monkeypatch, fake_metadata):
         dir1_file1,
         dir1_file2,
     ]
+
+    fake_metadata = Metadata()
 
     for file in file_list:
         fake_metadata.create(file)
@@ -100,11 +92,9 @@ def test_get_files_ok_with_dir_path(endpoint_download, endpoint_list):
     endpoint_list.assert_called_once()
 
 
-def test_get_files_ok_with_unavailable_path(
-    endpoint_download,
-    endpoint_list,
-    fake_metadata,
-):
+def test_get_files_ok_with_unavailable_path(endpoint_download, endpoint_list):
+    fake_metadata = Metadata()
+
     fake_metadata.model.__table__.drop(fake_metadata.engine)
 
     response = client.get("/files")
@@ -119,9 +109,8 @@ def test_get_files_ok_with_unavailable_path(
     endpoint_list.assert_called_once()
 
 
-def test_get_files_ok_no_available_paths(
-    endpoint_download, endpoint_list, fake_root, fake_metadata
-):
+def test_get_files_ok_no_available_paths(endpoint_download, endpoint_list, fake_root):
+    fake_metadata = Metadata()
     fake_metadata.remove(fake_root / "dir1")
     fake_metadata.remove(fake_root / "file1.txt")
     fake_metadata.remove(fake_root / "file2.fake")
@@ -232,12 +221,12 @@ def test_upload_file_ok_many_files():
     }
 
 
-def test_upload_file_err_metadata_creation_error(fake_metadata):
+def test_upload_file_err_metadata_creation_error():
     files = [
         ("files", ("file3.md", b"Test 3", "text/plain")),
     ]
 
-    with patch.object(type(fake_metadata), "create") as mock_metadata:
+    with patch.object(Metadata, "create") as mock_metadata:
         mock_metadata.side_effect = Exception("not in database")
 
         response = client.post("/files", files=files)
@@ -359,10 +348,10 @@ def test_delete_file_err_404_path_doesnt_exist(fake_root):
     assert content["detail"] == f"File at {path} not found"
 
 
-def test_delete_file_err_500_path_not_removed(fake_root, fake_metadata):
+def test_delete_file_err_500_path_not_removed(fake_root):
     path = fake_root / "file1.txt"
 
-    with patch.object(type(fake_metadata), "remove") as mock_metadata:
+    with patch.object(Metadata, "remove") as mock_metadata:
         mock_metadata.side_effect = Exception("not in database")
 
         response = client.delete("/files", params={"path": path})

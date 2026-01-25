@@ -1,7 +1,6 @@
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, select
 
 from .base import ModelManager
@@ -24,6 +23,24 @@ class UserModel(SQLModel, table=True):
 
 
 class User(ModelManager):
+    class Error(BaseException):
+        """Raised when the problem doesn't fit any of the other exceptions."""
+
+    class DoesNotExist(Error):  # noqa: N818
+        """Raised when the user doesn't exist in the database."""
+
+    class UsernameExists(Error):  # noqa: N818
+        """Raised when the user's `username` is already registered."""
+
+    class EmailExists(Error):  # noqa: N818
+        """Raised when the user's `email` is already registered."""
+
+    class NotVerified(Error):  # noqa: N818
+        """Raised when the user is not verified."""
+
+    class IncorrectPassword(Error):  # noqa: N818
+        """Raised when the user is registered but has provided an incorrect password."""
+
     model = UserModel
 
     def register(self, username: str, email: str, password: str) -> UserModel:
@@ -46,10 +63,22 @@ class User(ModelManager):
 
         Raises
         ------
-        Exception
-            When a user is already registered.
+        User.UsernameExists
+            When the user's `username` is already used.
+        User.EmailExists
+            When the user's `email` is already used.
         """
         with Session(self.engine) as session:
+            query_username = select(self.model.username).where(
+                self.model.username == username
+            )
+            if session.exec(query_username).one_or_none():
+                raise User.UsernameExists(f"Username '{username}' already exists")
+
+            query_email = select(self.model.email).where(self.model.email == email)
+            if session.exec(query_email).one_or_none():
+                raise User.EmailExists(f"Email '{email}' already exists")
+
             user = self.model(
                 username=username,
                 email=email,
@@ -57,17 +86,12 @@ class User(ModelManager):
             )
 
             session.add(user)
-
-            try:
-                session.commit()
-            except IntegrityError:
-                raise Exception(f"User '{email}' already exist")
-
+            session.commit()
             session.refresh(user)
 
             return user
 
-    def verify(self, email: str) -> UserModel:
+    def verify(self, email: str, password: str) -> UserModel:
         """
         Verify a user's account.
 
@@ -75,33 +99,8 @@ class User(ModelManager):
         ----------
         email: str
             The user's email.
-
-        Returns
-        -------
-        UserModel
-            The created user.
-        """
-        with Session(self.engine) as session:
-            statement = select(self.model).where(self.model.email == email)
-            results = session.exec(statement)
-
-            user = results.one()
-            user.is_verified = True
-
-            session.add(user)
-            session.commit()
-            session.refresh(user)
-
-            return user
-
-    def login(self, email: str) -> UserModel:
-        """
-        Mark a user as logged in.
-
-        Parameters
-        ----------
-        email: str
-            The user's email.
+        password: str
+            The user's password.
 
         Returns
         -------
@@ -110,21 +109,60 @@ class User(ModelManager):
 
         Raises
         ------
-        Exception
-            - When a user doesn't exist.
-            - When a user is not verified.
+        User.DoesNotExist
+            When the user doesn't exist.
+        User.IncorrectPassword
+            When the user's `password` is not correct.
         """
         with Session(self.engine) as session:
-            statement = select(self.model).where(self.model.email == email)
-            results = session.exec(statement)
+            if not (user := self.one_or_none(email)):
+                raise User.DoesNotExist("User is not registered")
 
-            user = results.one_or_none()
+            if user.password != password:
+                raise User.IncorrectPassword("Passwords don't match")
 
-            if not user:
-                raise Exception("User is not registered")
+            user.is_verified = True
+
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+            return user
+
+    def login(self, email: str, password: str) -> UserModel:
+        """
+        Mark a user as logged in.
+
+        Parameters
+        ----------
+        email: str
+            The user's email.
+        password: str
+            The user's password.
+
+        Returns
+        -------
+        UserModel
+            The created user.
+
+        Raises
+        ------
+        User.DoesNotExist
+            When a user doesn't exist.
+        User.NotVerified
+            When a user is not verified.
+        User.IncorrectPassword
+            When the user's `password` is not correct.
+        """
+        with Session(self.engine) as session:
+            if not (user := self.one_or_none(email)):
+                raise User.DoesNotExist("User is not registered")
 
             if not user.is_verified:
-                raise Exception("User is not verified")
+                raise User.NotVerified("User is not verified")
+
+            if user.password != password:
+                raise User.IncorrectPassword("Passwords don't match")
 
             user.last_login = datetime.now()
 
@@ -134,9 +172,9 @@ class User(ModelManager):
 
             return user
 
-    def exists(self, email: str) -> bool:
+    def one_or_none(self, email: str) -> Optional[UserModel]:
         """
-        Check if a user exists.
+        Return the user with `email`.
 
         Parameters
         ----------
@@ -145,13 +183,11 @@ class User(ModelManager):
 
         Returns
         -------
-        bool
-            `True` if a user exists. `False` otherwise.
+        Optional[UserModel]
+            The matching user or `None`.
         """
         with Session(self.engine) as session:
             statement = select(self.model).where(self.model.email == email)
             results = session.exec(statement)
 
-            user = results.one_or_none()
-
-            return bool(user)
+            return results.one_or_none()

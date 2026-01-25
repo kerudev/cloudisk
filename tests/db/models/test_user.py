@@ -1,10 +1,7 @@
 import pytest
 
 from cloudisk.db.models.user import User, UserModel
-
-TEST_USER = "test_user"
-TEST_MAIL = "test@test.com"
-TEST_PASS = "p4ssw0rd"
+from tests.conftest import TEST_MAIL, TEST_PASS, TEST_USER
 
 
 def test__init__(fake_db):
@@ -26,20 +23,27 @@ def test_register_ok():
     assert user.is_verified is False
 
 
-def test_register_err_user_already_exists():
+def test_register_raises_UsernameExists():
     manager = User()
-
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
 
-    with pytest.raises(Exception):
-        manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
+    with pytest.raises(User.UsernameExists):
+        manager.register(username=TEST_USER, email="fake@test.com", password=TEST_PASS)
 
 
-def test_verify():
+def test_register_raises_EmailExists():
     manager = User()
-
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-    user = manager.verify(email=TEST_MAIL)
+
+    with pytest.raises(User.EmailExists):
+        manager.register(username="test_user2", email=TEST_MAIL, password=TEST_PASS)
+
+
+def test_verify_ok():
+    manager = User()
+    manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
+
+    user = manager.verify(email=TEST_MAIL, password=TEST_PASS)
 
     assert user.username == TEST_USER
     assert user.email == TEST_MAIL
@@ -48,12 +52,27 @@ def test_verify():
     assert user.is_verified is True
 
 
+def test_verify_raises_DoesNotExist():
+    manager = User()
+
+    with pytest.raises(User.DoesNotExist):
+        manager.verify(email=TEST_MAIL, password=TEST_PASS)
+
+
+def test_verify_raises_IncorrectPassword():
+    manager = User()
+    manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
+
+    with pytest.raises(User.IncorrectPassword):
+        manager.verify(email=TEST_MAIL, password="incorrect_password")
+
+
 def test_login_ok():
     manager = User()
 
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-    manager.verify(email=TEST_MAIL)
-    user = manager.login(email=TEST_MAIL)
+    manager.verify(email=TEST_MAIL, password=TEST_PASS)
+    user = manager.login(email=TEST_MAIL, password=TEST_PASS)
 
     assert user.username == TEST_USER
     assert user.email == TEST_MAIL
@@ -62,27 +81,36 @@ def test_login_ok():
     assert user.is_verified is True
 
 
-def test_login_err_doesnt_exist():
+def test_login_raises_DoesNotExist():
     manager = User()
 
-    with pytest.raises(Exception):
-        manager.login(email=TEST_MAIL)
+    with pytest.raises(User.DoesNotExist):
+        manager.login(email=TEST_MAIL, password=TEST_PASS)
 
 
-def test_login_err_user_is_not_verified():
-    manager = User()
-    manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-
-    with pytest.raises(Exception):
-        manager.login(email=TEST_MAIL)
-
-
-def test_exists_returns_True():
+def test_login_raises_NotVerified():
     manager = User()
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
 
-    assert manager.exists(email=TEST_MAIL) is True
+    with pytest.raises(User.NotVerified):
+        manager.login(email=TEST_MAIL, password=TEST_PASS)
 
 
-def test_exists_returns_False():
-    assert User().exists(email=TEST_MAIL) is False
+def test_login_raises_IncorrectPassword():
+    manager = User()
+    manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
+    manager.verify(email=TEST_MAIL, password=TEST_PASS)
+
+    with pytest.raises(User.IncorrectPassword):
+        manager.login(email=TEST_MAIL, password="incorrect_password")
+
+
+def test_one_or_none_returns_user():
+    manager = User()
+    user = manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
+
+    assert manager.one_or_none(email=TEST_MAIL) == user
+
+
+def test_one_or_none_returns_None():
+    assert User().one_or_none(email=TEST_MAIL) is None

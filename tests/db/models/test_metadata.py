@@ -97,10 +97,10 @@ def test_create_ok(fake_root):
     assert metadata.content_type is None
 
 
-def test_create_err_non_unique_path(fake_root):
+def test_create_raises_PathExists(fake_root):
     path = fake_root / "file1.txt"
 
-    with pytest.raises(Exception):
+    with pytest.raises(Metadata.PathExists):
         Metadata().create(path)
 
 
