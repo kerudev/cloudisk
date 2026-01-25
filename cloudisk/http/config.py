@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from cloudisk.http.routers import files, root
+from cloudisk.http.routers import auth, files, root
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_STATIC
 
@@ -22,6 +22,7 @@ logger = get_logger("cloudisk.api")
 app = FastAPI(**API_CONFIG)
 
 # Include routers in app
+app.include_router(auth.router)
 app.include_router(root.router)
 app.include_router(files.router)
 
@@ -33,4 +34,4 @@ app.mount("/static", StaticFiles(directory=CLOUDISK_STATIC, html=True), name="st
 async def general_exception_handler(request: Request, e: Exception) -> JSONResponse:
     """Exception handler to catch unhandled exceptions."""
     logger.critical(f"Unhandled exception occurred: {e}")
-    return JSONResponse({"message": "Internal server error"}, 500)
+    return JSONResponse({"message": str(e)}, 500)
