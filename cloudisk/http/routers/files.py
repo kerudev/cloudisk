@@ -2,7 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from cloudisk.db.models import Metadata
@@ -115,7 +115,7 @@ async def _download_files(path: Path) -> FileResponse | StreamingResponse:
         500: {"description": "Internal server error."},
     },
 )
-async def get_files(request: Request, path: Path = Depends(validate_path)):
+async def get_files(path: Path = Depends(validate_path)):
     """
     Get files list if path is directory. Else, download file.
 
@@ -126,8 +126,6 @@ async def get_files(request: Request, path: Path = Depends(validate_path)):
     path : Path
         Path that is being accessed.
     """
-    logger.info(f"Request on get_files: query_params - {dict(request.query_params)}")
-
     storage_path = path_resolve(CLOUDISK_ROOT / path)
 
     endpoint = _download_files if storage_path.is_file() else _list_files
@@ -188,7 +186,6 @@ async def upload_file(files: list[UploadFile] = File(...)):
     },
 )
 async def delete_file(
-    request: Request,
     path: Path = Query(
         ...,
         description=f"File or dir path to be deleted from {CLOUDISK_ROOT.as_posix()}",
@@ -215,8 +212,6 @@ async def delete_file(
     HTTPException - 500
         If an error occurs deleting the file or directory.
     """
-    logger.info(f"Request on delete_file: query_params - {dict(request.query_params)}")
-
     storage_path = CLOUDISK_ROOT / path
 
     if not is_subpath(storage_path):
