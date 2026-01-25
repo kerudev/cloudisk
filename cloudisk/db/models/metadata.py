@@ -30,6 +30,12 @@ class MetadataModel(SQLModel, table=True):
 class Metadata(ModelManager):
     model = MetadataModel
 
+    class Error(BaseException):
+        """Raised when the problem doesn't fit any of the other exceptions."""
+
+    class PathExists(Error):  # noqa: N818
+        """Raised when the user doesn't exist in the database."""
+
     @property
     def available_paths(self) -> list[str]:
         """
@@ -81,7 +87,7 @@ class Metadata(ModelManager):
 
         Raises
         ------
-        Exception
+        Metadata.PathExists
             When a path is already registered.
         """
         path_str = str(path)
@@ -102,7 +108,7 @@ class Metadata(ModelManager):
             try:
                 session.commit()
             except IntegrityError:
-                raise Exception(f"Path '{path_str}' already exist")
+                raise Metadata.PathExists(f"Path '{path_str}' already exist")
 
             session.refresh(metadata)
 

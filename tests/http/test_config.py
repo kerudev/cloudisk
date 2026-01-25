@@ -9,7 +9,10 @@ from cloudisk.http.config import general_exception_handler
 @pytest.mark.asyncio
 async def test_general_exception_handler():
     request = Mock()
-    response = await general_exception_handler(request, Exception())
+    response = await general_exception_handler(
+        request,
+        Exception("Internal server error"),
+    )
 
     assert response.status_code == 500
 
