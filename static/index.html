@@ -10,7 +10,16 @@
     <title>Cloudisk</title>
 </head>
 <body>
-    <button id="upload-btn" style="margin-top: 24px; margin-left: 24px;">Subir archivo</button>
+    <form id="user-form">
+        <input type="text" placeholder="user" id="user" value="user">
+        <input type="text" placeholder="mail" id="mail" value="mail">
+        <input type="password" placeholder="pass" id="pass" value="pass">
+        <input type="submit" value="Register" id="register" value="register">
+        <input type="submit" value="Verify" id="verify" value="verify">
+        <input type="submit" value="Login" id="login" value="login">
+    </form>
+
+    <button id="upload-btn" style="margin-top: 24px; margin-left: 24px;">Upload file(s)</button>
     <input id="upload-input" type="file" multiple hidden />
     <div id="root"></div>
 </body>
