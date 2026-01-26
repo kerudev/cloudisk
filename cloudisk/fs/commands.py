@@ -19,11 +19,11 @@ def init_cloudisk_root() -> bool:
     """
     # Handle it asking for user consent
     if CLOUDISK_ROOT.exists() and not ask_remove_path(CLOUDISK_ROOT):
-        logger.error(f"Failed initializing folder {CLOUDISK_ROOT}")
+        logger.error(f"Failed initializing folder '{CLOUDISK_ROOT}'")
         return False
 
     CLOUDISK_ROOT.mkdir()
-    logger.info(f"Initialized folder {CLOUDISK_ROOT} successfully")
+    logger.info(f"Initialized folder '{CLOUDISK_ROOT}' successfully")
 
     return True
 
