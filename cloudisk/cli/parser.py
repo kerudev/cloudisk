@@ -51,6 +51,9 @@ def unlink(
     unlink_path(path)
 
 
-@app.command(help="Runs the cloudisk server on 0.0.0.0:8000")
-def run():
-    server.run()
+@app.command(help="Runs the cloudisk server on 'host:port' (default: '0.0.0.0:8000')")
+def run(
+    host: Annotated[str, typer.Option()] = "0.0.0.0",
+    port: Annotated[int, typer.Option()] = 8000,
+):
+    server.run(host=host, port=port)
