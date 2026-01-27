@@ -1,10 +1,11 @@
-from typing import Optional
+from pathlib import Path
 
-from fastapi import FastAPI
-from uvicorn import Config, Server
+import uvicorn
+
+import cloudisk
 
 
-def run(host: str = "0.0.0.0", port: int = 8000, app: Optional[FastAPI] = None) -> None:
+def run(host: str = "0.0.0.0", port: int = 8000) -> None:
     """
     Run server with the given parameters.
 
@@ -14,14 +15,13 @@ def run(host: str = "0.0.0.0", port: int = 8000, app: Optional[FastAPI] = None) 
         Host address to run server in. By default, 0.0.0.0.
     port : int
         Port to run server in. By default, 8000.
-    app : Optional[FastAPI] = None
-        A FastAPI instance.
     """
-    if not app:
-        from cloudisk.http.config import app as fastapi
-
-        app = fastapi
-
-    config = Config(app=app, host=host, port=port)
-    server = Server(config)
-    server.run()
+    uvicorn.run(
+        app="cloudisk.http.config:app",
+        host=host,
+        port=port,
+        log_level="info",
+        reload=True,
+        reload_dirs=[Path(cloudisk.__file__).parent],
+        reload_includes=["*.py"],
+    )
