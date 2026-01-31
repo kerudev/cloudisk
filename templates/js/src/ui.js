@@ -23,7 +23,7 @@ export const newLink = path => {
 
     trash.addEventListener('click', e => rmLink(e.target.closest("li")));
 
-    fetch("/static/svg/trash.svg")
+    fetch("/static/src/assets/trash.svg")
         .then(res => res.text())
         .then(svg => trash.innerHTML = svg);
 
