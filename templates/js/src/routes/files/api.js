@@ -60,22 +60,3 @@ export const download = async path => {
     history.pushState(state, '', `/${queryParams}`);
     history.pushState(state, '', '/' + queryParams);
 }
-
-export const managerUser = async (action) => {
-    const response = await fetch(`/auth/${action}`, {
-        method: "POST",
-        body: JSON.stringify({
-            username: document.getElementById("user").value,
-            email: document.getElementById("mail").value,
-            password: document.getElementById("pass").value,
-        }),
-        headers: {
-            "Content-Type": "application/json",
-        }
-    });
-
-    const body = await response.json();
-    if (!response.ok) console.error(body["message"]);
-
-    return body;
-}

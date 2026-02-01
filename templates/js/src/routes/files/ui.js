@@ -1,4 +1,11 @@
-import { download } from "./api.js";
+import { download } from "./routes/files/api.js";
+
+export const files = () => {
+    document.getElementById("root").innerHTML = `
+        <button id="upload-btn" style="margin-top: 24px; margin-left: 24px;">Upload file(s)</button>
+        <input id="upload-input" type="file" multiple hidden />
+    `;
+}
 
 /**
  * Creates a new `li` that contains an `a` (anchor) element.
@@ -38,7 +45,7 @@ export const newLink = path => {
  *
  * @param {HTMLLIElement} link - A list element.
  */
-export const rmLink = async link => {
+const rmLink = async link => {
     const text = link.querySelector("a").textContent;
     const path = resolvePath(text);
 
