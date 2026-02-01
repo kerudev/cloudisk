@@ -9,7 +9,7 @@ from .base import ModelManager
 
 
 class UserModel(SQLModel, table=True):
-    __tablename__ = "user"
+    __tablename__ = "users"
 
     id: int = Field(primary_key=True)
 
@@ -23,7 +23,7 @@ class UserModel(SQLModel, table=True):
 
 
 class User(ModelManager):
-    class Error(BaseException):
+    class Error(Exception):
         """Raised when the problem doesn't fit any of the other exceptions."""
 
     class DoesNotExist(Error):  # noqa: N818
