@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from cloudisk.db.models.metadata import Metadata
+from cloudisk.db.models.user import User
 from cloudisk.http.routers import auth, files, root
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_STATIC
@@ -35,3 +37,13 @@ async def general_exception_handler(request: Request, e: Exception) -> JSONRespo
     """Exception handler to catch unhandled exceptions."""
     logger.critical(f"Unhandled exception occurred: {e}")
     return JSONResponse({"message": str(e)}, 500)
+
+
+@app.exception_handler(User.Error)
+async def user_exception_handler(request: Request, e: User.Error) -> None:
+    raise HTTPException(400, str(e))
+
+
+@app.exception_handler(Metadata.Error)
+async def metadata_exception_handler(request: Request, e: Metadata.Error) -> None:
+    raise HTTPException(400, str(e))

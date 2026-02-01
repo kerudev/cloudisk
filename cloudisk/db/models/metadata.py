@@ -30,7 +30,7 @@ class MetadataModel(SQLModel, table=True):
 class Metadata(ModelManager):
     model = MetadataModel
 
-    class Error(BaseException):
+    class Error(Exception):
         """Raised when the problem doesn't fit any of the other exceptions."""
 
     class PathExists(Error):  # noqa: N818
