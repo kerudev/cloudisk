@@ -6,14 +6,20 @@ from cloudisk.db.models.user import User, UserModel
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-class UserForm(BaseModel):
+class UserRegisterForm(BaseModel):
     username: str
     email: str
     password: str
 
 
+class UserLoginForm(BaseModel):
+    # username: str
+    email: str
+    password: str
+
+
 @router.post("/register")
-async def register(body: UserForm) -> UserModel:
+async def register(body: UserRegisterForm) -> UserModel:
     """Register route."""
     user = User().register(
         username=body.username,
@@ -25,7 +31,7 @@ async def register(body: UserForm) -> UserModel:
 
 
 @router.post("/verify")
-async def verify(body: UserForm) -> UserModel:
+async def verify(body: UserLoginForm) -> UserModel:
     user = User().verify(
         email=body.email,
         password=body.password,
@@ -35,7 +41,7 @@ async def verify(body: UserForm) -> UserModel:
 
 
 @router.post("/login")
-async def login(body: UserForm) -> UserModel:
+async def login(body: UserLoginForm) -> UserModel:
     user = User().login(
         email=body.email,
         password=body.password,

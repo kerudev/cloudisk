@@ -1,42 +1,11 @@
 import { managerUser } from "./api.js";
+import { input } from "../../components.js";
+import { files } from "../files/ui.js";
 
-export const auth = () => {
-    const root = document.getElementById("root");
-    root.classList.add(
-        "grid",
-        "place-content-center",
-        "m-8",
-    );
+const registerForm = async () => {
+    _initAuthForm();
 
-    root.innerHTML = `
-        <div class="grid gap-y-8 rounded-lg bg-white p-8">
-            <a id="register" class="font-bold text-2xl">Register</a>
-            <a id="login" class="font-bold text-2xl">Login</a>
-        </div>
-    `;
-
-    document.querySelector("#register").addEventListener("click", _register);
-    document.querySelector("#login").addEventListener("click", _login);
-};
-
-const _register = async () => {
-    const root = document.getElementById("root");
-    root.classList.add(
-        "grid",
-        "place-content-center",
-        "m-8",
-    );
-
-    root.innerHTML = `
-    <div class="rounded-lg bg-white p-8">
-        <div class="flex place-content-between mb-4">
-            <h1 class="font-bold text-2xl">Register</h1>
-            <div id="error" class="bg-red-400 font-bold px-2 py-1 rounded-md invisible"></div>
-        </div>
-
-        <form id="register-form" class="grid grid-cols-2 gap-4 w-md" method="POST" target="_blank"></form>
-    </div>
-    `;
+    document.getElementById("auth-form-title").textContent = "Register";
 
     const submit = document.createElement("button");
     submit.id = "register";
@@ -44,7 +13,13 @@ const _register = async () => {
     submit.type = "submit";
     submit.textContent = "Register";
 
-    const form = document.getElementById("register-form");
+    const loginFormBtn = submit.cloneNode(true);
+    loginFormBtn.id = "login-form-button";
+    loginFormBtn.textContent = "Log into an existing account";
+    loginFormBtn.addEventListener("click", loginForm);
+
+    const form = document.getElementById("auth-form");
+    form.classList.add("grid-cols-2");
     form.replaceChildren(
         input({
             id: "user",
@@ -64,6 +39,7 @@ const _register = async () => {
             label: "Password",
         }),
         submit,
+        loginFormBtn,
     );
 
     document.getElementById("pass").parentElement.classList.add("col-span-2");
@@ -71,66 +47,91 @@ const _register = async () => {
     form.addEventListener("submit", async e => {
         e.preventDefault();
 
-        for (const id of ["user", "mail", "pass"]) {
-            if (!document.getElementById(id).value) {
-                const error = document.getElementById("error");
+        if (!_validateAuthForm(["user", "mail", "pass"])) return;
 
-                error.classList.add("visible");
-                error.textContent = "Please fill all inputs";
-                return;
-            }
-        }
-
-        await managerUser("register");
+        if (await managerUser("register")) loginForm();
     });
 };
 
-const _login = async () => {
-    document.getElementById("root").innerHTML = `
-        <form id="login-form">
-            <input type="text" placeholder="user" id="user" value="user">
-            <input type="text" placeholder="mail" id="mail" value="mail">
-            <input type="password" placeholder="pass" id="pass" value="pass">
-            <input type="submit" value="Login" id="login" value="login">
-        </form>
-    `;
+export const loginForm = async () => {
+    _initAuthForm();
 
-    document.getElementById("login-form").addEventListener("submit", async e => {
+    document.getElementById("auth-form-title").textContent = "Login";
+
+    const submit = document.createElement("button");
+    submit.id = "login";
+    submit.className = "focus:border-indigo-600 focus:outline-2 rounded-lg px-2 py-1 outline outline-offset-4 outline-solid col-span-2 mt-4";
+    submit.type = "submit";
+    submit.textContent = "Login";
+
+    const registerFormBtn = submit.cloneNode(true);
+    registerFormBtn.id = "register-form-button";
+    registerFormBtn.textContent = "Create an account";
+    registerFormBtn.addEventListener("click", registerForm);
+
+    const form = document.getElementById("auth-form");
+    form.classList.add("grid-cols-1");
+    form.replaceChildren(
+        input({
+            id: "mail",
+            placeholder: "example@email.com",
+            type: "email",
+            label: "Email",
+        }),
+        input({
+            id: "pass",
+            type: "password",
+            placeholder: "Super secret password!",
+            label: "Password",
+        }),
+        submit,
+        registerFormBtn,
+    );
+
+    document.getElementById("mail").parentElement.classList.add("col-span-2");
+    document.getElementById("pass").parentElement.classList.add("col-span-2");
+
+    form.addEventListener("submit", async e => {
         e.preventDefault();
-        await managerUser("login");
+
+        if (!_validateAuthForm(["mail", "pass"])) return;
+
+        await managerUser("verify");
+        if (await managerUser("login")) await files();
     });
 };
 
-const input = (params = {}) => {
-    const {
-        id = "",
-        className = "focus:border-indigo-600 focus:outline-2 rounded-lg px-2 py-1 outline outline-offset-4 outline-solid",
-        type = "",
-        value = "",
-        placeholder = "",
-        label = "",
-    } = params;
+const _initAuthForm = () => {
+    const root = document.getElementById("root");
+    root.classList.add(
+        "grid",
+        "place-content-center",
+        "h-screen",
+        "p-8",
+    );
 
-    const div = document.createElement("div");
-    div.classList.add("grid");
+    root.innerHTML = `
+    <div class="rounded-lg bg-white p-8">
+        <div class="flex place-content-between mb-4">
+            <h1 id="auth-form-title" class="font-bold text-2xl"></h1>
+            <div id="error" class="bg-red-400 font-bold px-2 py-1 rounded-md invisible"></div>
+        </div>
 
-    if (label) {
-        const _label = document.createElement("label");
-        _label.textContent = label;
-        _label.className = "mb-2 font-bold"
+        <form id="auth-form" class="grid gap-4 w-md" method="POST" target="_blank"></form>
+    </div>
+    `;
+};
 
-        div.appendChild(_label);
+const _validateAuthForm = (fields) => {
+    for (const id of fields) {
+        if (!document.getElementById(id).value) {
+            const error = document.getElementById("error");
+
+            error.classList.add("visible");
+            error.textContent = "Please fill all inputs";
+            return false;
+        }
     }
 
-    const input = document.createElement("input");
-
-    if (id) input.id = id;
-    if (className) input.className = className;
-    if (type) input.type = type;
-    if (placeholder) input.placeholder = placeholder;
-    if (value) input.value = value;
-
-    div.appendChild(input);
-
-    return div;
+    return true;
 };
