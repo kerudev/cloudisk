@@ -6,7 +6,7 @@ export const getFiles = async () => {
     if (params.get("path") == "..") {
         params.delete("path");
 
-        const query = params.size ? "?" + params.toString() : "";
+        const query = params.size ? `?${params.toString()}` : "";
         history.replaceState(null, "", location.pathname + query);
     }
 
@@ -58,5 +58,4 @@ export const download = async path => {
 
     const state = params ? { path } : {};
     history.pushState(state, '', `/${queryParams}`);
-    history.pushState(state, '', '/' + queryParams);
 }

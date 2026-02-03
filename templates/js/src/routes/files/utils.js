@@ -1,19 +1,41 @@
-import { newLink } from "./ui.js";
+import { newRow } from "./ui.js";
 
 /**
- * Updates the contents of `body` by generating a new `ul` with the contents of
- * `files`, calling `newLink` on each iteration.
+ * Updates the contents of `body` by generating a new `table` with the contents
+ * of `files`, calling `newRow` on each iteration.
  *
  * @param {string[]} files - List of file names.
  * @param {boolean} isRoot - Defines if the listed directory is the server root.
  */
 export const processFiles = (files, isRoot) => {
-    const ul = document.createElement("ul");
-    files.forEach(file => ul.appendChild(newLink(file)));
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+        <tr>
+            <th class="bg-gray-500 uppercase font-bold text-left pr-4 py-3 pl-4 border-b border-gray-100 rounded-tl-lg">File</th>
+            <th class="bg-gray-500 font-bold text-center border-b w-1/6 border-gray-100">Download</th>
+            <th class="bg-gray-500 font-bold text-center border-b w-1/6 border-gray-100 rounded-tr-lg">Delete</th>
+        </tr>
+    `;
 
-    if (!isRoot) ul.prepend(newLink(".."));
+    const tbody = document.createElement("tbody");
 
-    document.getElementById("root").replaceChildren(ul);
+    if (!isRoot) tbody.appendChild(newRow(".."));
+
+    files.forEach(file => tbody.appendChild(newRow(file)));
+
+    const lastRow = [...tbody.rows].at(-1);
+    const cells = [...lastRow.cells];
+
+    cells[0].classList.add("rounded-bl-lg");
+    cells.at(-1).classList.add("rounded-br-lg");
+
+    const table = document.createElement("table");
+    table.className = "w-full p-4 rounded-lg";
+
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    document.getElementById("file-list").replaceChildren(table);
 }
 
 /**
