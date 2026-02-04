@@ -23,10 +23,38 @@ export const files = async () => {
     fileList.id = "file-list";
     fileList.className = "w-2xl ml-4 mt-4 rounded-lg";
 
-    document.getElementById("root").replaceChildren(button, fileList);
+    const dragAndDrop = createDragAndDrop();
+
+    document.getElementById("root").replaceChildren(dragAndDrop, button, fileList);
 
     await getFiles();
 }
+
+const createDragAndDrop = () => {
+    const box = document.createElement("div");
+    box.className = "fixed inset-0";
+
+    box.addEventListener("popstate", getFiles);
+
+    box.addEventListener("dragenter", e => e.preventDefault());
+
+    box.addEventListener("dragover", e => {
+        e.preventDefault();
+        if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    });
+
+    box.addEventListener("drop", async e => {
+        e.preventDefault();
+
+        const files = [...e.dataTransfer.items]
+            .filter(item => item.kind === "file")
+            .map(item => item.getAsFile());
+
+        await upload(files);
+    });
+
+    return box;
+};
 
 /**
  * Creates a new `li` that contains an `a` (anchor) element.
