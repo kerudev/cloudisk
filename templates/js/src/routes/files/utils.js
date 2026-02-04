@@ -8,6 +8,8 @@ import { newRow } from "./ui.js";
  * @param {boolean} isRoot - Defines if the listed directory is the server root.
  */
 export const processFiles = (files, isRoot) => {
+    if (files.length == 0) return;
+
     const thead = document.createElement("thead");
     thead.innerHTML = `
         <tr>

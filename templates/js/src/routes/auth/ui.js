@@ -111,7 +111,7 @@ const _initAuthForm = () => {
     );
 
     root.innerHTML = `
-    <div class="rounded-lg bg-white p-8">
+    <div class="rounded-lg bg-white p-8 outline-1">
         <div class="flex place-content-between mb-4">
             <h1 id="auth-form-title" class="font-bold text-2xl"></h1>
             <div id="error" class="bg-red-400 font-bold px-2 py-1 rounded-md invisible"></div>
