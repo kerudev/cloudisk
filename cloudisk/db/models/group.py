@@ -14,13 +14,13 @@ class GroupModel(SQLModel, table=True):
 
 
 class Group(ModelManager):
+    model = GroupModel
+
     class Error(Exception):
         """Raised when the problem doesn't fit any of the other exceptions."""
 
     class AlreadyExists(Error):  # noqa: N818
         """Raised when the group already exists."""
-
-    model = GroupModel
 
     def create(self, name: str) -> GroupModel:
         """

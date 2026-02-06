@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from cloudisk.db.models.user import User
+from cloudisk.db.models import User
 from cloudisk.http.config import app
 from tests.conftest import TEST_MAIL, TEST_PASS, TEST_USER
 
