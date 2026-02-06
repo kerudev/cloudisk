@@ -2,8 +2,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from cloudisk.db.models.metadata import Metadata
-from cloudisk.db.models.user import User
+from cloudisk.db.models import Metadata, User
 from cloudisk.http.routers import auth, files, root
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_STATIC

@@ -4,8 +4,7 @@ from unittest.mock import Mock
 import pytest
 from fastapi import HTTPException
 
-from cloudisk.db.models.metadata import Metadata
-from cloudisk.db.models.user import User
+from cloudisk.db.models import Metadata, User
 from cloudisk.http.config import (
     general_exception_handler,
     metadata_exception_handler,

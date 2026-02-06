@@ -23,6 +23,8 @@ class UserModel(SQLModel, table=True):
 
 
 class User(ModelManager):
+    model = UserModel
+
     class Error(Exception):
         """Raised when the problem doesn't fit any of the other exceptions."""
 
@@ -40,8 +42,6 @@ class User(ModelManager):
 
     class IncorrectPassword(Error):  # noqa: N818
         """Raised when the user is registered but has provided an incorrect password."""
-
-    model = UserModel
 
     def register(self, username: str, email: str, password: str) -> UserModel:
         """
