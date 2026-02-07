@@ -26,7 +26,7 @@ class UserModel(SQLModel, table=True):
 
     is_verified: bool = False
 
-    groups: list[GroupModel] = Relationship(
+    groups: list["GroupModel"] = Relationship(
         back_populates="users",
         link_model=UserGroupLink,
     )

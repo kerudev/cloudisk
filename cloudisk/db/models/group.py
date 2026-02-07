@@ -17,7 +17,7 @@ class GroupModel(SQLModel, table=True):
 
     name: str = Field(unique=True)
 
-    users: list[UserModel] = Relationship(
+    users: list["UserModel"] = Relationship(
         back_populates="groups",
         link_model=UserGroupLink,
     )
