@@ -1,15 +1,20 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Session, SQLModel, select
+from sqlmodel import Field, Relationship, Session, SQLModel, select
+
+from cloudisk.db.links import UserGroupLink
 
 from .base import ModelManager
+
+if TYPE_CHECKING:
+    from cloudisk.db.models.group import GroupModel
 
 # TODO save encrypted passwords
 
 
 class UserModel(SQLModel, table=True):
-    __tablename__ = "users"
+    __tablename__ = "user"
 
     id: int = Field(primary_key=True)
 
@@ -20,6 +25,11 @@ class UserModel(SQLModel, table=True):
     last_login: Optional[datetime] = Field(None, nullable=True)
 
     is_verified: bool = False
+
+    groups: list[GroupModel] = Relationship(
+        back_populates="users",
+        link_model=UserGroupLink,
+    )
 
 
 class User(ModelManager):

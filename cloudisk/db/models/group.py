@@ -1,16 +1,26 @@
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Session, SQLModel, select
+from sqlmodel import Field, Relationship, Session, SQLModel, select
+
+from cloudisk.db.links import UserGroupLink
 
 from .base import ModelManager
 
+if TYPE_CHECKING:
+    from cloudisk.db.models.user import UserModel
+
 
 class GroupModel(SQLModel, table=True):
-    __tablename__ = "groups"
+    __tablename__ = "group"
 
     id: int = Field(primary_key=True)
 
     name: str = Field(unique=True)
+
+    users: list[UserModel] = Relationship(
+        back_populates="groups",
+        link_model=UserGroupLink,
+    )
 
 
 class Group(ModelManager):
