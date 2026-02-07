@@ -103,6 +103,8 @@ export const loginForm = async () => {
 
 const _initAuthForm = () => {
     const root = document.getElementById("root");
+    root.className = "";
+
     root.classList.add(
         "grid",
         "place-content-center",

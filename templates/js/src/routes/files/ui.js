@@ -25,14 +25,17 @@ export const files = async () => {
 
     const dragAndDrop = createDragAndDrop();
 
-    document.getElementById("root").replaceChildren(dragAndDrop, button, fileList);
+    const root = document.getElementById("root");
+    root.className = "";
+
+    root.replaceChildren(dragAndDrop, button, fileList);
 
     await getFiles();
 }
 
 const createDragAndDrop = () => {
     const box = document.createElement("div");
-    box.className = "fixed inset-0";
+    box.className = "fixed inset-0 -z-1";
 
     box.addEventListener("popstate", getFiles);
 
