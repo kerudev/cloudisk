@@ -36,7 +36,6 @@ class Metadata(ModelManager):
     class PathExists(Error):  # noqa: N818
         """Raised when the user doesn't exist in the database."""
 
-    @property
     def available_paths(self) -> list[str]:
         """
         Return the rows where `available` is `True`.
@@ -56,13 +55,13 @@ class Metadata(ModelManager):
 
             return results.all()
 
-    def select(self, path: Path) -> MetadataModel:
+    def select(self, path: Path) -> Optional[MetadataModel]:
         """
         Select the row where `self.model.path` equals `path`.
 
         Returns
         -------
-        MetadataModel
+        Optional[MetadataModel]
             The selected instance.
         """
         with Session(self.engine) as session:

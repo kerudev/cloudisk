@@ -57,16 +57,17 @@ async def _list_files(path: Path) -> JSONResponse:
             key=lambda x: (not x.is_dir(), x.name.casefold()),
         )
 
-        available_paths = Metadata().available_paths
+        available_paths = Metadata().available_paths()
 
         files = list(filter(lambda file: str(file) in available_paths, files))
         files = list(filter(lambda file: file.name not in EXCLUDED_FILES, files))
-        files = [file.name for file in files]
 
     except Exception as e:
         raise HTTPException(500, f"Error when listing {path.as_posix()} directory: {e}")
 
-    return JSONResponse({"files": files, "isRoot": path == CLOUDISK_ROOT})
+    file_names = [file.name for file in files]
+
+    return JSONResponse({"files": file_names, "isRoot": path == CLOUDISK_ROOT})
 
 
 async def _download_files(path: Path) -> FileResponse | StreamingResponse:

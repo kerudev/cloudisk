@@ -1,12 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import TypeVar
 
-from sqlalchemy import Engine, create_engine, inspect
+from sqlalchemy import inspect
 from sqlmodel import SQLModel
 
-from cloudisk.vars import CLOUDISK_DB_PATH
-
-T = TypeVar("T", bound=SQLModel)
+from cloudisk.context import global_context
 
 
 class AbstractManager(ABC):
@@ -39,10 +36,9 @@ class AbstractManager(ABC):
 
 
 class ModelManager(AbstractManager):
-    model: T
-
-    def __init__(self) -> None:  # noqa: D107
-        self.engine = self.get_engine()
+    def __init__(self):  # noqa: D107
+        self.engine = global_context.engine
+        self.model = getattr(self.__class__, "model", None)
 
         SQLModel.metadata.create_all(self.engine)
 
@@ -50,17 +46,3 @@ class ModelManager(AbstractManager):
 
     def table_exists(self) -> bool:
         return inspect(self.engine).has_table(self.model.__tablename__)
-
-    # Public
-
-    @staticmethod
-    def get_engine() -> Engine:
-        """
-        Create an SQLite `Engine`.
-
-        Returns
-        -------
-        Engine
-            The engine used to run operations on the SQLite database.
-        """
-        return create_engine(f"sqlite:///{CLOUDISK_DB_PATH}")

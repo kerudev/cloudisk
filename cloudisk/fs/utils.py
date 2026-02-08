@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Iterator
+from typing import Iterator, Optional
 from urllib.parse import quote
 
 from filetype import guess_mime
@@ -36,7 +36,7 @@ def get_mime_type(path: Path) -> str | None:
         return None
 
 
-def is_subpath(child_path: Path, parent_path: Path = None) -> bool:
+def is_subpath(child_path: Path, parent_path: Optional[Path] = None) -> bool:
     """
     Check if child path is subpath of parent_path.
 
@@ -44,7 +44,7 @@ def is_subpath(child_path: Path, parent_path: Path = None) -> bool:
     ----------
     child_path : Path
         Child path to check if it is a subpath.
-    parent_path : Path, optional
+    parent_path : Optional[Path] = None
         Parent path to check if child_path is subpath of it.
 
     Returns
@@ -62,7 +62,7 @@ def is_subpath(child_path: Path, parent_path: Path = None) -> bool:
     return parent_path in child_path.parents
 
 
-def is_parent_path(child_path: Path, parent_path: Path = None) -> bool:
+def is_parent_path(child_path: Path, parent_path: Optional[Path] = None) -> bool:
     """
     Check if child path is superpath of parent_path.
 
@@ -70,7 +70,7 @@ def is_parent_path(child_path: Path, parent_path: Path = None) -> bool:
     ----------
     child_path : Path
         Child path to check if parent_path is superpath of it.
-    parent_path : Path, optional
+    parent_path : Optional[Path] = None
         Parent path to check if it is a superpath.
 
     Returns

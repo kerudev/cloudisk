@@ -1,3 +1,5 @@
+from typing import Any, Mapping
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -7,7 +9,7 @@ from cloudisk.http.routers import auth, files, root
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_STATIC
 
-API_CONFIG = {
+API_CONFIG: Mapping[str, Any] = {
     "title": "cloudisk_api",
     "description": "API to manage cloudisk files",
     "version": "0.1.0",
