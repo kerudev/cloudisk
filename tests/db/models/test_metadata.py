@@ -52,7 +52,7 @@ def test__init__(fake_db):
 
 
 def test_available_paths_table_exists(fake_root):
-    paths = Metadata().available_paths
+    paths = Metadata().available_paths()
 
     expected_paths = [
         fake_root / "file1.txt",
@@ -71,7 +71,7 @@ def test_available_paths_table_doesnt_exist():
     manager = Metadata()
     manager.model.__table__.drop(manager.engine)
 
-    paths = manager.available_paths
+    paths = manager.available_paths()
 
     assert paths == []
 
