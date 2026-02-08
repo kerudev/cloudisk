@@ -7,6 +7,9 @@ class Context:
     def __init__(self):  # noqa: D107
         self._engine = None
 
+    def reset(self):
+        self._engine = None
+
     @property
     def engine(self):
         if self._engine is None:
