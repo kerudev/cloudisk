@@ -46,6 +46,8 @@ test = [
     "pytest>=8.4.2",
     "pytest-asyncio>=1.3.0",
     "pytest-cov>=7.0.0",
+    "tox>=4.34.1",
+    "tox-uv>=1.29.0",
 ]
 
 build = [
@@ -56,6 +58,23 @@ build = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+
+[tool.tox]
+env_list = [
+    "3.10",
+    "3.11",
+    "3.12",
+    "3.13",
+    "3.14",
+    "3.14t",
+]
+
+[tool.tox.env_run_base]
+deps = [".[test]"]
+allowlist_externals = ["pytest"]
+description = "Run test under {base_python}"
+set_env.COVERAGE_FILE = { replace = "env", name = "COVERAGE_FILE", default = "reports/coverage{envname}.xml" }
+commands = [["pytest", "--cov=.", "--cov-report=term-missing", "--cov-report=xml"]]
 
 [tool.coverage.run]
 branch = true

@@ -24,3 +24,8 @@ dist/
 *.sqlite3
 .coverage
 coverage.xml
+reports/
+
+# tox
+.tox
+build/
