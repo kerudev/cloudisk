@@ -1,4 +1,7 @@
+import os
+import smtplib
 from datetime import datetime
+from email.message import EmailMessage
 from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, Session, SQLModel, select
@@ -99,9 +102,11 @@ class User(ModelManager):
             session.commit()
             session.refresh(user)
 
+            self._send_verify_email(user.email)
+
             return user
 
-    def verify(self, email: str, password: str) -> UserModel:
+    def verify(self, email: str) -> UserModel:
         """
         Verify a user's account.
 
@@ -109,8 +114,6 @@ class User(ModelManager):
         ----------
         email: str
             The user's email.
-        password: str
-            The user's password.
 
         Returns
         -------
@@ -127,9 +130,6 @@ class User(ModelManager):
         with Session(self.engine) as session:
             if not (user := self.one_or_none(email)):
                 raise User.DoesNotExist("User is not registered")
-
-            if user.password != password:
-                raise User.IncorrectPassword("Passwords don't match")
 
             user.is_verified = True
 
@@ -181,6 +181,39 @@ class User(ModelManager):
             session.refresh(user)
 
             return user
+
+    def _send_verify_email(self, email: str):
+        msg = EmailMessage()
+        msg["Subject"] = "Verify your cloudisk account"
+        msg["To"] = email
+
+        if not (email_from := os.environ.get("CLOUDISK_EMAIL_FROM")):
+            raise Exception("Please define CLOUDISK_EMAIL_FROM")
+
+        msg["From"] = email_from
+
+        # TODO replace default localhost with passed configuration
+        url = f"http://localhost:8000/auth/verify?email={email}"
+
+        msg.add_alternative(
+            f"""
+            <html>
+                <body>
+                    <p>Please verify your account.</p>
+                    <a href="{url}">Verify account</a>
+                </body>
+            </html>
+            """,
+            subtype="html",
+        )
+
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(
+                os.environ.get("CLOUDISK_EMAIL_FROM"),
+                os.environ.get("CLOUDISK_PASS_FROM"),
+            )
+            server.send_message(msg)
 
     def one_or_none(self, email: str) -> Optional[UserModel]:
         """

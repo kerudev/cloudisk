@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from pydantic import BaseModel
 
 from cloudisk.db.models.user import User, UserModel
@@ -30,12 +30,9 @@ async def register(body: UserRegisterForm) -> UserModel:
     return user
 
 
-@router.post("/verify")
-async def verify(body: UserLoginForm) -> UserModel:
-    user = User().verify(
-        email=body.email,
-        password=body.password,
-    )
+@router.get("/verify")
+async def verify(email: str = Query(...)) -> UserModel:
+    user = User().verify(email=email)
 
     return user
 
