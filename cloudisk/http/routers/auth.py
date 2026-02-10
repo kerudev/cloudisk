@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Query
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from cloudisk.db.models.user import User, UserModel
@@ -31,10 +32,10 @@ async def register(body: UserRegisterForm) -> UserModel:
 
 
 @router.get("/verify")
-async def verify(email: str = Query(...)) -> UserModel:
-    user = User().verify(email=email)
+async def verify(email: str = Query(...)) -> RedirectResponse:
+    User().verify(email=email)
 
-    return user
+    return RedirectResponse("/", status_code=302)
 
 
 @router.post("/login")
