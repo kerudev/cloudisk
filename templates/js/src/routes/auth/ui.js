@@ -95,8 +95,6 @@ export const loginForm = async () => {
         e.preventDefault();
 
         if (!_validateAuthForm(["mail", "pass"])) return;
-
-        await managerUser("verify");
         if (await managerUser("login")) await files();
     });
 };

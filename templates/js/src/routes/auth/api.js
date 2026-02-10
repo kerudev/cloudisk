@@ -25,11 +25,13 @@ export const managerUser = async action => {
         return false;
     };
 
-    const expire = new Date();
-    const oneWeek = 7 * 24 * 60 * 60 * 1000;
-    expire.setTime(expire.getTime() + oneWeek);
+    if (action == "login") {
+        const expire = new Date();
+        const oneWeek = 7 * 24 * 60 * 60 * 1000;
+        expire.setTime(expire.getTime() + oneWeek);
 
-    document.cookie = `user=${JSON.stringify(data)}; expires=${expire.toUTCString()}`;
+        document.cookie = `user=${JSON.stringify(data)}; expires=${expire.toUTCString()}`;
+    }
 
     return true;
 }
