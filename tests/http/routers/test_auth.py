@@ -1,3 +1,6 @@
+from unittest.mock import MagicMock
+
+import pytest
 from fastapi.testclient import TestClient
 
 from cloudisk.db.models import User
@@ -5,6 +8,16 @@ from cloudisk.http.config import app
 from tests.conftest import TEST_MAIL, TEST_PASS, TEST_USER
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def mock_send_verify_email(monkeypatch, request):
+    if request.node.get_closest_marker("no_mock"):
+        return
+
+    monkeypatch.setattr(
+        "cloudisk.db.models.user.User._send_verify_email", lambda _, __: ...
+    )
 
 
 def test_register():
@@ -32,22 +45,21 @@ def test_register():
 
 
 def test_verify():
-    User().register(
+    manager = User()
+
+    manager.register(
         username=TEST_USER,
         email=TEST_MAIL,
         password=TEST_PASS,
     )
 
-    response = client.post(
-        "/auth/verify",
-        json={
-            "username": TEST_USER,
-            "email": TEST_MAIL,
-            "password": TEST_PASS,
-        },
-    )
+    response = client.get("/auth/verify", params={"email": TEST_MAIL})
 
-    user = response.json()
+    assert len(response.history) == 1
+    assert response.history[0].status_code == 302
+    assert response.url.path == "/"
+
+    user = manager.one_or_none(TEST_MAIL).model_dump()
 
     expected_user = {
         "id": 1,
@@ -62,16 +74,15 @@ def test_verify():
 
 
 def test_login():
-    User().register(
+    manager = User()
+
+    manager.register(
         username=TEST_USER,
         email=TEST_MAIL,
         password=TEST_PASS,
     )
 
-    User().verify(
-        email=TEST_MAIL,
-        password=TEST_PASS,
-    )
+    manager.verify(email=TEST_MAIL)
 
     response = client.post(
         "/auth/login",
@@ -95,3 +106,21 @@ def test_login():
 
     assert user == expected_user
     assert last_login is not None
+
+
+@pytest.mark.no_mock
+def test_send_verify_email_ok(monkeypatch):
+    mock_smtp = MagicMock()
+
+    monkeypatch.setattr("cloudisk.db.models.user.smtplib.SMTP", mock_smtp)
+    monkeypatch.setenv("CLOUDISK_EMAIL_FROM", TEST_MAIL)
+
+    User()._send_verify_email(email=TEST_MAIL)
+
+    mock_smtp.return_value.__enter__.return_value.send_message.assert_called_once()
+
+
+@pytest.mark.no_mock
+def test_send_verify_email_raises_Exception():
+    with pytest.raises(Exception):
+        User()._send_verify_email(email=TEST_MAIL)

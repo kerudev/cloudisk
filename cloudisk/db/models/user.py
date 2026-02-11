@@ -124,8 +124,6 @@ class User(ModelManager):
         ------
         User.DoesNotExist
             When the user doesn't exist.
-        User.IncorrectPassword
-            When the user's `password` is not correct.
         """
         with Session(self.engine) as session:
             if not (user := self.one_or_none(email)):
