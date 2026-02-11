@@ -4,6 +4,13 @@ from cloudisk.db.models.user import User, UserModel
 from tests.conftest import TEST_MAIL, TEST_PASS, TEST_USER
 
 
+@pytest.fixture(autouse=True)
+def mock_send_verify_email(monkeypatch):
+    monkeypatch.setattr(
+        "cloudisk.db.models.user.User._send_verify_email", lambda _, __: ...
+    )
+
+
 def test__init__(fake_db):
     manager = User()
 
@@ -43,7 +50,7 @@ def test_verify_ok():
     manager = User()
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
 
-    user = manager.verify(email=TEST_MAIL, password=TEST_PASS)
+    user = manager.verify(email=TEST_MAIL)
 
     assert user.username == TEST_USER
     assert user.email == TEST_MAIL
@@ -56,22 +63,14 @@ def test_verify_raises_DoesNotExist():
     manager = User()
 
     with pytest.raises(User.DoesNotExist):
-        manager.verify(email=TEST_MAIL, password=TEST_PASS)
-
-
-def test_verify_raises_IncorrectPassword():
-    manager = User()
-    manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-
-    with pytest.raises(User.IncorrectPassword):
-        manager.verify(email=TEST_MAIL, password="incorrect_password")
+        manager.verify(email=TEST_MAIL)
 
 
 def test_login_ok():
     manager = User()
 
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-    manager.verify(email=TEST_MAIL, password=TEST_PASS)
+    manager.verify(email=TEST_MAIL)
     user = manager.login(email=TEST_MAIL, password=TEST_PASS)
 
     assert user.username == TEST_USER
@@ -99,7 +98,7 @@ def test_login_raises_NotVerified():
 def test_login_raises_IncorrectPassword():
     manager = User()
     manager.register(username=TEST_USER, email=TEST_MAIL, password=TEST_PASS)
-    manager.verify(email=TEST_MAIL, password=TEST_PASS)
+    manager.verify(email=TEST_MAIL)
 
     with pytest.raises(User.IncorrectPassword):
         manager.login(email=TEST_MAIL, password="incorrect_password")
