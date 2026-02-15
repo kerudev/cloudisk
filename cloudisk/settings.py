@@ -1,22 +1,27 @@
 import os
+from functools import cache
 
 
 class Settings:
-    def __init__(self, module: str):  # noqa: D107
+    def __init__(self, module: str = None):  # noqa: D107
         self.module = module
 
-    def get(self, key: str, default: str) -> str:
+    def __getattr__(self, name: str):  # noqa: D105
+        return self.get(name)
+
+    @cache
+    def get(self, key: str, default: str = None) -> str:
         """
         Return the value of `key` in the defined settings.
 
-        The `key` is searched as an environment variable. If it does't exist,
-        it's searched in `self.module`.
+        The `key` is searched first in `self.module`. If it is not found, it's
+        searched as an environment variable.
 
         Parameters
         ----------
         key: str
             The key to get.
-        default: str
+        default: str = None
             The default value in case `key` doesn't exist.
 
         Returns
@@ -24,16 +29,19 @@ class Settings:
         str
             The value.
         """
-        if isinstance(key, str):
+        if not isinstance(key, str):
             raise Exception("key must be a string")
 
         if key.upper() != key:
-            raise Exception("key must have all uppercase")
+            raise Exception("All characters in key must be uppercase")
 
-        if env := os.environ.get(f"CLOUDISK_{key}"):
-            return env
+        value = None
 
-        settings = __import__(self.module)
-        var = getattr(settings, key, default)
+        if self.module:
+            settings = __import__(self.module)
+            value = getattr(settings, key, default)
 
-        return var
+        return value or os.environ.get(f"CLOUDISK_{key}") or default
+
+
+global_settings = Settings()
