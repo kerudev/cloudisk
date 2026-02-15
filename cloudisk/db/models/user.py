@@ -1,4 +1,3 @@
-import os
 import smtplib
 from datetime import datetime
 from email.message import EmailMessage
@@ -7,6 +6,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlmodel import Field, Relationship, Session, SQLModel, select
 
 from cloudisk.db.links import UserGroupLink
+from cloudisk.settings import global_settings
 
 from .base import ModelManager
 
@@ -185,7 +185,7 @@ class User(ModelManager):
         msg["Subject"] = "Verify your cloudisk account"
         msg["To"] = email
 
-        if not (email_from := os.environ.get("CLOUDISK_EMAIL_FROM")):
+        if not (email_from := global_settings.EMAIL_FROM):
             raise Exception("Please define CLOUDISK_EMAIL_FROM")
 
         msg["From"] = email_from
@@ -208,8 +208,8 @@ class User(ModelManager):
         with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
             server.starttls()
             server.login(
-                os.environ.get("CLOUDISK_EMAIL_FROM"),
-                os.environ.get("CLOUDISK_PASS_FROM"),
+                global_settings.EMAIL_FROM,
+                global_settings.PASS_FROM,
             )
             server.send_message(msg)
 
