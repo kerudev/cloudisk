@@ -3,8 +3,14 @@ from functools import cache
 
 
 class Settings:
+    class Error(Exception):
+        """Raised when the problem doesn't fit any of the other exceptions."""
+
+    class BadKeyFormat(Error):  # noqa: N818
+        """Raised when the key's format or type is not correct."""
+
     def __init__(self, module: str = None):  # noqa: D107
-        self.module = module
+        self.module = __import__(module) if module else None
 
     def __getattr__(self, name: str):  # noqa: D105
         return self.get(name)
@@ -29,19 +35,41 @@ class Settings:
         str
             The value.
         """
-        if not isinstance(key, str):
-            raise Exception("key must be a string")
-
-        if key.upper() != key:
-            raise Exception("All characters in key must be uppercase")
+        self._check_key(key)
 
         value = None
 
         if self.module:
-            settings = __import__(self.module)
-            value = getattr(settings, key, default)
+            value = getattr(self.module, key, default)
 
         return value or os.environ.get(f"CLOUDISK_{key}") or default
 
+    def set_default(self, **kwargs):  # noqa: D105
+        for key, value in kwargs.items():
+            self._check_key(key)
 
-global_settings = Settings()
+            if self.module:
+                self.module.__dict__.setdefault(key, value)
+            else:
+                os.environ.setdefault(f"CLOUDISK_{key}", value)
+
+    def _check_key(self, key: str):
+        """
+        Check if the key has a correct format.
+
+        Parameters
+        ----------
+        key: str
+            The key to check.
+
+        Raises
+        ------
+        BadKeyFormat
+            - The key is not a string.
+            - Not all characters are uppercase.
+        """
+        if not isinstance(key, str):
+            raise Settings.BadKeyFormat("key must be a string")
+
+        if key.upper() != key:
+            raise Settings.BadKeyFormat("All characters in key must be uppercase")

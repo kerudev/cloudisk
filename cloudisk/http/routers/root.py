@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi.responses import FileResponse
 
-from cloudisk.vars import CLOUDISK_STATIC
+from cloudisk.http.vars import CLOUDISK_STATIC
 
 router = APIRouter(prefix="", tags=["root"])
 
