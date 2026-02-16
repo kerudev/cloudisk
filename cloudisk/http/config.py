@@ -6,8 +6,8 @@ from fastapi.staticfiles import StaticFiles
 
 from cloudisk.db.models import Metadata, User
 from cloudisk.http.routers import auth, files, root
+from cloudisk.http.vars import CLOUDISK_STATIC
 from cloudisk.logger import get_logger
-from cloudisk.vars import CLOUDISK_STATIC
 
 API_CONFIG: Mapping[str, Any] = {
     "title": "cloudisk_api",
