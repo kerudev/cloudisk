@@ -19,6 +19,3 @@ class Context:
 
     def _create_engine(self):
         return create_engine(f"sqlite:///{CLOUDISK_DB_PATH}")
-
-
-global_context = Context()

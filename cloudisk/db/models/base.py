@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy import inspect
 from sqlmodel import SQLModel
 
-from cloudisk.context import global_context
+from cloudisk.globals import context
 
 
 class AbstractManager(ABC):
@@ -37,7 +37,7 @@ class AbstractManager(ABC):
 
 class ModelManager(AbstractManager):
     def __init__(self):  # noqa: D107
-        self.engine = global_context.engine
+        self.engine = context.engine
         self.model = getattr(self.__class__, "model", None)
 
         SQLModel.metadata.create_all(self.engine)
