@@ -1,5 +1,8 @@
+import importlib
+import inspect
 import os
-from functools import cache
+from functools import _lru_cache_wrapper, cache
+from typing import Any
 
 
 class Settings:
@@ -10,13 +13,13 @@ class Settings:
         """Raised when the key's format or type is not correct."""
 
     def __init__(self, module: str = None):  # noqa: D107
-        self.module = __import__(module) if module else None
+        self.module = importlib.import_module(module) if module else None
 
     def __getattr__(self, name: str):  # noqa: D105
         return self.get(name)
 
     @cache
-    def get(self, key: str, default: str = None) -> str:
+    def get(self, key: str, default: Any = None) -> str:
         """
         Return the value of `key` in the defined settings.
 
@@ -27,7 +30,7 @@ class Settings:
         ----------
         key: str
             The key to get.
-        default: str = None
+        default: Any = None
             The default value in case `key` doesn't exist.
 
         Returns
@@ -44,14 +47,25 @@ class Settings:
 
         return value or os.environ.get(f"CLOUDISK_{key}") or default
 
-    def set_default(self, **kwargs):  # noqa: D105
+    def set_default(self, **kwargs):
+        """
+        Set default values for each key in `kwargs`.
+        If `key` exists, the default value is not applied.
+        """
         for key, value in kwargs.items():
             self._check_key(key)
 
             if self.module:
                 self.module.__dict__.setdefault(key, value)
             else:
-                os.environ.setdefault(f"CLOUDISK_{key}", value)
+                os.environ.setdefault(f"CLOUDISK_{key}", str(value))
+
+    def clear_cache(self):
+        """Clear cache for all functions and properties inside the instance."""
+        for _, attr in inspect.getmembers(self):
+            if inspect.ismethod(attr):
+                if isinstance(attr.__func__, _lru_cache_wrapper):
+                    attr.__func__.cache_clear()
 
     def _check_key(self, key: str):
         """

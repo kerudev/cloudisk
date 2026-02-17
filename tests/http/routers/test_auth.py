@@ -1,5 +1,3 @@
-from unittest.mock import MagicMock
-
 import pytest
 from fastapi.testclient import TestClient
 
@@ -11,10 +9,7 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def mock_send_verify_email(monkeypatch, request):
-    if request.node.get_closest_marker("no_mock"):
-        return
-
+def mock_send_verify_email(monkeypatch):
     monkeypatch.setattr(
         "cloudisk.db.models.user.User._send_verify_email", lambda _, __: ...
     )
@@ -106,21 +101,3 @@ def test_login():
 
     assert user == expected_user
     assert last_login is not None
-
-
-@pytest.mark.no_mock
-def test_send_verify_email_ok(monkeypatch):
-    mock_smtp = MagicMock()
-
-    monkeypatch.setattr("cloudisk.db.models.user.smtplib.SMTP", mock_smtp)
-    monkeypatch.setenv("CLOUDISK_EMAIL_FROM", TEST_MAIL)
-
-    User()._send_verify_email(email=TEST_MAIL)
-
-    mock_smtp.return_value.__enter__.return_value.send_message.assert_called_once()
-
-
-@pytest.mark.no_mock
-def test_send_verify_email_raises_Exception():
-    with pytest.raises(Exception):
-        User()._send_verify_email(email=TEST_MAIL)

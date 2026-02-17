@@ -1,3 +1,5 @@
+from unittest.mock import MagicMock
+
 import pytest
 
 from cloudisk.db.models.user import User, UserModel
@@ -5,7 +7,10 @@ from tests.conftest import TEST_MAIL, TEST_PASS, TEST_USER
 
 
 @pytest.fixture(autouse=True)
-def mock_send_verify_email(monkeypatch):
+def mock_send_verify_email(monkeypatch, request):
+    if request.node.get_closest_marker("no_mock"):
+        return
+
     monkeypatch.setattr(
         "cloudisk.db.models.user.User._send_verify_email", lambda _, __: ...
     )
@@ -113,3 +118,21 @@ def test_one_or_none_returns_user():
 
 def test_one_or_none_returns_None():
     assert User().one_or_none(email=TEST_MAIL) is None
+
+
+@pytest.mark.no_mock
+def test_send_verify_email_ok(monkeypatch):
+    mock_smtp = MagicMock()
+
+    monkeypatch.setattr("cloudisk.db.models.user.smtplib.SMTP", mock_smtp)
+    monkeypatch.setenv("CLOUDISK_EMAIL_FROM", TEST_MAIL)
+
+    User()._send_verify_email(email=TEST_MAIL)
+
+    mock_smtp.return_value.__enter__.return_value.send_message.assert_called_once()
+
+
+@pytest.mark.no_mock
+def test_send_verify_email_raises_Exception():
+    with pytest.raises(Exception):
+        User()._send_verify_email(email=TEST_MAIL)

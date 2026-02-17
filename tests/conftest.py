@@ -1,6 +1,6 @@
 import pytest
 
-from cloudisk.context import global_context
+from cloudisk.globals import context, settings
 from cloudisk.vars import CLOUDISK_DB_FILE
 
 TEST_USER = "test_user"
@@ -13,7 +13,8 @@ def fake_db(tmp_path, monkeypatch):
     tmp_db = tmp_path / CLOUDISK_DB_FILE
 
     monkeypatch.setattr("cloudisk.context.CLOUDISK_DB_PATH", tmp_db)
-    global_context.reset()
+    context.reset()
+    settings.clear_cache()
 
     monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_DB_PATH", tmp_db)
 
