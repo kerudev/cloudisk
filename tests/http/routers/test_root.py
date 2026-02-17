@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from cloudisk.http.config import app
-from cloudisk.vars import CLOUDISK_STATIC
+from cloudisk.http.vars import CLOUDISK_STATIC
 
 client = TestClient(app)
 
