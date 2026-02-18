@@ -1,8 +1,10 @@
 import os
 from pathlib import Path
 
-from cloudisk.fs.utils import ask_remove_path
+from cloudisk.db.models import Space
+from cloudisk.fs.utils import ask_remove_dir, ask_remove_path
 from cloudisk.logger import get_logger
+from cloudisk.tools.settings import Settings
 from cloudisk.vars import CLOUDISK_ROOT
 
 logger = get_logger("cloudisk.fs")
@@ -91,3 +93,20 @@ def unlink_path(path: Path) -> None:
 
     os.unlink(path)
     logger.info(f"Unlinked '{path}'")
+
+
+def create_space(name: str, protect: bool) -> None:
+    if not CLOUDISK_ROOT.exists():
+        init_cloudisk_root()
+
+    space_path = CLOUDISK_ROOT / name
+
+    if space_path.exists() and not ask_remove_dir(space_path):
+        return
+
+    space_path.mkdir()
+
+    Settings.build_module(space_path / "settings.py")
+    Space().create(name=name, protect=protect)
+
+    logger.info(f"Created the '{name}' space")

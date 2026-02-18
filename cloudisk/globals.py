@@ -2,8 +2,8 @@
 
 from pathlib import Path
 
-from cloudisk.context import Context
-from cloudisk.settings import Settings
+from cloudisk.tools.context import Context
+from cloudisk.tools.settings import Settings
 
 context = Context()
 
