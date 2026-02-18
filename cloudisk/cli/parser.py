@@ -1,9 +1,10 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Optional
 
 import typer
 
-from cloudisk.fs.commands import init_cloudisk_root, link_path, unlink_path
+from cloudisk.cli.vars import HEADER_ART
+from cloudisk.fs.commands import create_space, init_cloudisk_root, link_path, unlink_path
 from cloudisk.http import server
 from cloudisk.vars import CLOUDISK_ROOT
 
@@ -13,9 +14,44 @@ app = typer.Typer(
 )
 
 
-@app.command(help=f"Creates the basic configuration to run cloudisk at '{CLOUDISK_ROOT}'")
+@app.command(help=f"Creates the basic scaffolding at '{CLOUDISK_ROOT}'")
 def init():
     init_cloudisk_root()
+
+
+@app.command(help=f"Creates a new space inside '{CLOUDISK_ROOT}'")
+def create(
+    name: Annotated[
+        str,
+        typer.Option("--name", "-n", help="Name of the instance."),
+    ] = None,
+    protect: Annotated[
+        Optional[bool],
+        typer.Option(
+            "--protect",
+            "-p",
+            help="If `True`, all routes will be protected with user login.",
+        ),
+    ] = None,
+):
+    typer.echo(HEADER_ART)
+
+    prompt_name = "> Name of the space"
+
+    if not name:
+        name = typer.prompt(prompt_name)
+    else:
+        typer.echo(f"{prompt_name}: {name}")
+
+    prompt_protect = "> Protect routes with user login?"
+
+    if protect is None:
+        protect = typer.confirm(prompt_protect)
+    else:
+        selected = "Y" if protect else "N"
+        typer.echo(f"{prompt_protect} [Y/N] {selected}")
+
+    create_space(name, protect)
 
 
 @app.command(help=f"Creates a symlink inside '{CLOUDISK_ROOT}'")

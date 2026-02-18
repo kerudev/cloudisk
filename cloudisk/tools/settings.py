@@ -1,8 +1,12 @@
 import importlib
 import inspect
 import os
+import shutil
 from functools import _lru_cache_wrapper, cache
+from pathlib import Path
 from typing import Any
+
+from . import _settings
 
 
 class Settings:
@@ -66,6 +70,18 @@ class Settings:
             if inspect.ismethod(attr):
                 if isinstance(attr.__func__, _lru_cache_wrapper):
                     attr.__func__.cache_clear()
+
+    @staticmethod
+    def build_module(path: Path):
+        """
+        Build a settings module from parameters.
+
+        Parameters
+        ----------
+        path: Path
+            The path of the settings module.
+        """
+        shutil.copyfile(_settings.default.__file__, path)
 
     def _check_key(self, key: str):
         """
