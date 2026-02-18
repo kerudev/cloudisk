@@ -12,7 +12,7 @@ TEST_PASS = "p4ssw0rd"
 def fake_db(tmp_path, monkeypatch):
     tmp_db = tmp_path / CLOUDISK_DB_FILE
 
-    monkeypatch.setattr("cloudisk.context.CLOUDISK_DB_PATH", tmp_db)
+    monkeypatch.setattr("cloudisk.tools.context.CLOUDISK_DB_PATH", tmp_db)
     context.reset()
     settings.clear_cache()
 

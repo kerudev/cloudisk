@@ -1,5 +1,4 @@
-from sqlite3 import IntegrityError
-
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel
 
 from cloudisk.db.models.base import ModelManager
@@ -10,7 +9,7 @@ class SpaceModel(SQLModel, table=True):
 
     id: int = Field(primary_key=True)
 
-    name: str
+    name: str = Field(unique=True)
     protect: bool
 
 
@@ -25,7 +24,7 @@ class Space(ModelManager):
 
     def create(self, name: str, protect: bool) -> SpaceModel:
         """
-        Create a `MetadataModel` instance.
+        Create a `SpaceModel` instance.
 
         Parameters
         ----------
@@ -42,7 +41,7 @@ class Space(ModelManager):
         Raises
         ------
         Space.AlreadyExists
-            When a path is already registered.
+            When a space already exists.
         """
         with Session(self.engine) as session:
             space = self.model(
@@ -55,6 +54,7 @@ class Space(ModelManager):
             try:
                 session.commit()
             except IntegrityError:
+                pass
                 raise Space.AlreadyExists(f"Space '{name}' already exist")
 
             session.refresh(space)

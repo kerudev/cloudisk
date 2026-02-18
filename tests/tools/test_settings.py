@@ -3,7 +3,7 @@ from types import ModuleType
 
 import pytest
 
-from cloudisk.settings import Settings
+from cloudisk.tools.settings import Settings
 from cloudisk.vars import CLOUDISK_ROOT
 from tests.conftest import TEST_MAIL
 
