@@ -73,7 +73,7 @@ env_list = [
 deps = [".[test]"]
 allowlist_externals = ["pytest"]
 description = "Run test under {base_python}"
-set_env.COVERAGE_FILE = { replace = "env", name = "COVERAGE_FILE", default = "reports/coverage{envname}.xml" }
+set_env.COVERAGE_FILE = { replace = "env", name = "COVERAGE_FILE", default = "reports/coverage-${os}-{envname}.xml" }
 commands = [["pytest", "--cov=.", "--cov-report=term-missing", "--cov-report=xml"]]
 
 [tool.coverage.run]
