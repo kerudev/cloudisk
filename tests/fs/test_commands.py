@@ -1,10 +1,17 @@
 import os
+import shutil
 from unittest.mock import patch
 
 import pytest
 
 from cloudisk.fs import commands
-from cloudisk.fs.commands import _try_link, init_cloudisk_root, link_path, unlink_path
+from cloudisk.fs.commands import (
+    _try_link,
+    create_space,
+    init_cloudisk_root,
+    link_path,
+    unlink_path,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -161,3 +168,35 @@ def test_unlink_path_err_path_doesnt_exist(fake_root):
 
     assert not path.exists()
     assert not path.is_symlink()
+
+
+def test_create_space(fake_root):
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    create_space(name=space_name, protect=True)
+
+    assert space_path.exists()
+
+
+def test_create_space_root_doenst_exist(fake_root):
+    shutil.rmtree(fake_root)
+
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    create_space(name=space_name, protect=True)
+
+    assert space_path.exists()
+
+
+def test_create_space_ask_remove_dir_is_False(fake_root):
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    create_space(name=space_name, protect=True)
+
+    with patch.object(commands, "ask_remove_dir", return_value=False):
+        create_space(name=space_name, protect=True)
+
+    assert space_path.exists()

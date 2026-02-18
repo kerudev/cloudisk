@@ -65,6 +65,8 @@ omit = [
     "static/*",
     "tests/*",
     "cloudisk/cli/*",
+    "cloudisk/db/links/*",
+    "cloudisk/tools/_settings/*",
 ]
 
 [tool.coverage.report]
