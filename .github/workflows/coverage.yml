@@ -32,7 +32,10 @@ jobs:
         run: uv sync --group test
 
       - name: Run coverage and generate coverage reports
-        run: uv run tox -e ${{ matrix.python-version//./ }}
+        run: |
+          version="py${{ matrix.python-version }}"
+          version="${version//./}"
+          uv run tox -e $version
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
