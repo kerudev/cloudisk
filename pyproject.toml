@@ -76,7 +76,7 @@ description = "Run test under {base_python}"
 set_env.COVERAGE_FILE = { replace = "env", name = "COVERAGE_FILE", default = "reports/coverage-{env:OS_NAME:local}-{env_name}.xml" }
 
 commands = [
-    ["uv", "sync", "--group", "test", "--active"],
+    ["uv", "sync", "--group", "test", "--active", "--no-config"],
     ["pytest", "--cov=.", "--cov-report=term-missing"]
 ]
 

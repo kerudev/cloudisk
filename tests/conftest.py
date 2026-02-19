@@ -18,4 +18,6 @@ def fake_db(tmp_path, monkeypatch):
 
     monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_DB_PATH", tmp_db)
 
-    return tmp_db
+    yield tmp_db
+
+    context.engine.dispose()

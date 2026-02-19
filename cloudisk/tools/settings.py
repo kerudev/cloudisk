@@ -1,8 +1,7 @@
 import importlib
-import inspect
 import os
 import shutil
-from functools import _lru_cache_wrapper, cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -66,10 +65,7 @@ class Settings:
 
     def clear_cache(self):
         """Clear cache for all functions and properties inside the instance."""
-        for _, attr in inspect.getmembers(self):
-            if inspect.ismethod(attr):
-                if isinstance(attr.__func__, _lru_cache_wrapper):
-                    attr.__func__.cache_clear()
+        self.get.cache_clear()
 
     @staticmethod
     def build_module(path: Path):
