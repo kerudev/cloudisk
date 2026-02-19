@@ -15,7 +15,7 @@ jobs:
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14"]
 
     env:
-      os: ${{ matrix.os }}
+      OS_NAME: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v4
@@ -32,23 +32,13 @@ jobs:
         run: uv sync --group test
 
       - name: Run coverage and generate coverage reports
-        run: uv run tox -e ${{ matrix.python-version }}
-
-      - name: List coverage files
-        id: files
-        run: |
-          versions='${{ toJSON(strategy.matrix.python-version) }}'
-          reports=""
-          for v in ${{ matrix.python-version }}; do
-            reports="$reports $v"
-          done
-          echo "reports=$reports" >> $GITHUB_OUTPUT
+        run: uv run tox -e ${{ matrix.python-version//./ }}
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           parallel: true
-          files: ${{ steps.files.outputs.reports }}
+          files: reports/*.xml
 
   upload:
     needs: coverage
