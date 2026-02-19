@@ -35,13 +35,14 @@ jobs:
         run: uv run tox
 
       - name: List coverage files
+        id: files
         run: echo "reports=reports/*" >> $GITHUB_OUTPUT
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
         with:
           parallel: true
-          files: ${{ coverage.outputs.reports }}
+          files: ${{ steps.files.outputs.reports }}
 
   upload:
     needs: coverage
