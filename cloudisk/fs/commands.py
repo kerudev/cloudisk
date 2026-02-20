@@ -49,12 +49,14 @@ def _try_link(src: Path, dst: Path) -> None:
 
     # Raised on Windows when the user doesn't have Developer Mode on
     # https://docs.python.org/3/library/os.html#os.symlink
-    except OSError as e:
-        if os.name == "nt":
-            raise OSError(
-                "The symlink could not be created. "
-                "Make sure Developer Mode is on and try again."
-            ) from e
+    except OSError as e:  # pragma: no cover
+        if not os.name == "nt":
+            raise e
+
+        raise OSError(
+            "The symlink could not be created. "
+            "Make sure Developer Mode is on and try again."
+        ) from e
 
 
 def link_path(path: Path, recursive: bool = False) -> None:

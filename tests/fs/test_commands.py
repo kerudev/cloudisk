@@ -71,6 +71,23 @@ def test_try_link_err(fake_root):
     assert dst.resolve() == src
 
 
+def test_try_link_raises_OSError(fake_root):
+    src = fake_root / "src"
+    dst = fake_root / "dst"
+
+    src.mkdir()
+
+    with pytest.raises(OSError) as exc_info:
+        with patch.object(os, "symlink", side_effect=OSError):
+            _try_link(src, dst)
+
+    if os.name == "nt":
+        assert "Developer Mode" in str(exc_info.value)
+
+    assert not dst.is_symlink()
+    assert not dst.resolve() == src
+
+
 def test_link_path_ok_not_recursive_path_is_file(tmp_path, fake_root):
     file = tmp_path / "file1.txt"
     file.write_text("Content")
