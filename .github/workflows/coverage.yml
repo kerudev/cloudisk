@@ -44,12 +44,16 @@ jobs:
         run: uv run tox -e ${{ steps.translate.outputs.envname }}
 
       - name: Upload coverage to Coveralls
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
         uses: coverallsapp/github-action@v2
         with:
           parallel: true
           file: reports/coverage-${{ matrix.os }}-${{ steps.translate.outputs.envname }}.xml
 
   upload:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
     needs: coverage
     runs-on: ubuntu-latest
     steps:
