@@ -47,7 +47,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           parallel: true
-          files: reports/*.xml
+          file: reports/coverage-${{ matrix.os }}-${{ steps.translate.outputs.envname }}.xml
 
   upload:
     needs: coverage
