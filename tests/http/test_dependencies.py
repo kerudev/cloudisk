@@ -7,7 +7,7 @@ from cloudisk.http.dependencies import validate_path
 
 
 @pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch):
+def fake_root(tmp_path, monkeypatch) -> Path:
     (tmp_path / "file1.txt").write_text("Test 1")
 
     monkeypatch.setattr("cloudisk.fs.utils.CLOUDISK_ROOT", tmp_path)
@@ -43,7 +43,8 @@ async def test_validate_path_err_403_parent_path(fake_root):
 
     result = exc_info.value
 
-    expected_detail = f"You are not allowed to retrieve {(fake_root / path).resolve()}"
+    expected_path = (fake_root / path).resolve().as_posix()
+    expected_detail = f"You are not allowed to retrieve {expected_path}"
 
     assert result.status_code == 403
     assert result.detail == expected_detail

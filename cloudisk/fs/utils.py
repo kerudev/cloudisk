@@ -198,7 +198,7 @@ def ask_remove_path(path: Path) -> bool:
         return ask_remove_dir(path)
 
     raise Exception(
-        f"{path} already exists and is not a file or a directory. "
+        f"{path.as_posix()} already exists and is not a file or a directory. "
         "Please, remove it first."
     )
 
