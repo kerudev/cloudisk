@@ -10,6 +10,7 @@ jobs:
   coverage:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
         python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14", "3.14t"]
@@ -31,11 +32,16 @@ jobs:
       - name: Install tox
         run: uv sync --group test
 
-      - name: Run coverage and generate coverage reports
+      - name: Translate Python version to tox env
+        id: translate
+        shell: bash
         run: |
-          version="py${{ matrix.python-version }}"
-          version="${version//./}"
-          uv run tox -e $version
+          ENVNAME="py${{ matrix.python-version }}"
+          ENVNAME="${ENVNAME//./}"
+          echo "envname=$ENVNAME" >> $GITHUB_OUTPUT
+
+      - name: Run tests and generate coverage reports
+        run: uv run tox -e ${{ steps.translate.outputs.envname }}
 
       - name: Upload coverage to Coveralls
         uses: coverallsapp/github-action@v2
