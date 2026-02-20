@@ -67,7 +67,6 @@ env_list = [
     "py312",
     "py313",
     "py314",
-    "py314t",
 ]
 
 [tool.tox.env_run_base]
