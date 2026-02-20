@@ -1,5 +1,6 @@
 import os
 import shutil
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -15,7 +16,7 @@ from cloudisk.fs.commands import (
 
 
 @pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch):
+def fake_root(tmp_path, monkeypatch) -> Path:
     fake_path = tmp_path / "root"
     fake_path.mkdir()
 
@@ -55,6 +56,7 @@ def test_try_link_ok(fake_root):
 
     assert dst.is_symlink()
     assert dst.resolve() == src
+    assert dst.resolve().is_dir()
 
 
 def test_try_link_err(fake_root):
@@ -80,6 +82,7 @@ def test_link_path_ok_not_recursive_path_is_file(tmp_path, fake_root):
     assert link.exists()
     assert link.is_symlink()
     assert link.resolve() == file
+    assert link.resolve().is_file()
 
 
 def test_link_path_ok_not_recursive_path_is_dir(tmp_path, fake_root):
@@ -96,6 +99,7 @@ def test_link_path_ok_not_recursive_path_is_dir(tmp_path, fake_root):
     assert link.exists()
     assert link.is_symlink()
     assert link.resolve() == dir
+    assert link.resolve().is_dir()
 
 
 def test_link_path_ok_recursive(tmp_path, fake_root):
@@ -112,6 +116,7 @@ def test_link_path_ok_recursive(tmp_path, fake_root):
     assert link.exists()
     assert link.is_symlink()
     assert link.resolve() == file
+    assert link.resolve().is_file()
 
 
 def test_link_path_err_path_doesnt_exist(fake_root):

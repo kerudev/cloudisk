@@ -42,10 +42,19 @@ def _try_link(src: Path, dst: Path) -> None:
         Destination path to make symlink to.
     """
     try:
-        os.symlink(src, dst, target_is_directory=True)
+        os.symlink(src, dst)
         logger.info(f"Linked '{src}' -> '{dst}'")
     except FileExistsError:
         logger.info(f"Already linked: '{src}'")
+
+    # Raised on Windows when the user doesn't have Developer Mode on
+    # https://docs.python.org/3/library/os.html#os.symlink
+    except OSError as e:
+        if os.name == "nt":
+            raise OSError(
+                "The symlink could not be created. "
+                "Make sure Developer Mode is on and try again."
+            ) from e
 
 
 def link_path(path: Path, recursive: bool = False) -> None:

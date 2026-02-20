@@ -194,7 +194,7 @@ def test_remove_path_when_path(tmp_path: Path, mock_path_rmdir: MagicMock):
 def test_remove_path_raises_exception(tmp_path: Path):
     fake_path = tmp_path / "tmp_socket.sock"
     exception_text = (
-        f"{fake_path} already exists and is not a file or a directory. "
+        f"{fake_path.as_posix()} already exists and is not a file or a directory. "
         "Please, remove it first."
     )
 

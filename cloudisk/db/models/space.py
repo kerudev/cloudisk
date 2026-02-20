@@ -54,7 +54,6 @@ class Space(ModelManager):
             try:
                 session.commit()
             except IntegrityError:
-                pass
                 raise Space.AlreadyExists(f"Space '{name}' already exist")
 
             session.refresh(space)

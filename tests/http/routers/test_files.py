@@ -1,3 +1,4 @@
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -14,7 +15,7 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch):
+def fake_root(tmp_path, monkeypatch) -> Path:
     file1 = tmp_path / "file1.txt"
     file1.write_text("Test 1")
 
@@ -130,13 +131,15 @@ def test_get_files_ok_no_available_paths(endpoint_download, endpoint_list, fake_
 
 @pytest.mark.asyncio
 async def test_list_files_500_path_is_file(fake_root):
+    path = fake_root / "file1.txt"
+
     with pytest.raises(HTTPException) as exc_info:
-        await _list_files(fake_root / "file1.txt")
+        await _list_files(path)
 
     response = exc_info.value
 
     assert response.status_code == 500
-    assert "Errno 20" in response.detail
+    assert path.as_posix() in response.detail
 
 
 def test_get_files_ok_with_file_path_small_file(endpoint_download, endpoint_list):
@@ -158,7 +161,9 @@ def test_get_files_err_404_path_doesnt_exist(endpoint_download, endpoint_list, f
     assert response.status_code == 404
 
     content = response.json()
-    assert content["detail"] == f"{fake_root / 'fake'} path does not exist"
+    expected_path = (fake_root / "fake").as_posix()
+
+    assert content["detail"] == f"{expected_path} path does not exist"
 
     endpoint_download.assert_not_called()
     endpoint_list.assert_called_once()
@@ -283,9 +288,9 @@ def test_upload_file_err_403_subpath(fake_root):
     assert response.status_code == 403
 
     content = response.json()
-    assert (
-        content["detail"] == f'You are not allowed to create {fake_root / "../file1.txt"}'
-    )
+    expected_path = (fake_root / "../file1.txt").as_posix()
+
+    assert content["detail"] == f"You are not allowed to create {expected_path}"
 
 
 def test_delete_file_ok_file(fake_root):
@@ -297,7 +302,7 @@ def test_delete_file_ok_file(fake_root):
     assert path.exists()
 
     content = response.json()
-    assert content["message"] == f"{path} deleted correctly"
+    assert content["message"] == f"{path.as_posix()} deleted correctly"
 
 
 def test_delete_file_ok_dir(fake_root):
@@ -309,7 +314,7 @@ def test_delete_file_ok_dir(fake_root):
     assert path.exists()
 
     content = response.json()
-    assert content["message"] == f"{path} deleted correctly"
+    assert content["message"] == f"{path.as_posix()} deleted correctly"
 
 
 def test_delete_file_ok_link(fake_root):
@@ -321,7 +326,7 @@ def test_delete_file_ok_link(fake_root):
     assert path.exists()
 
     content = response.json()
-    assert content["message"] == f"{path} deleted correctly"
+    assert content["message"] == f"{path.as_posix()} deleted correctly"
 
 
 def test_delete_file_err_403_subpath(fake_root):
@@ -333,7 +338,7 @@ def test_delete_file_err_403_subpath(fake_root):
     assert not path.exists()
 
     content = response.json()
-    assert content["detail"] == f"You are not allowed to delete {path}"
+    assert content["detail"] == f"You are not allowed to delete {path.as_posix()}"
 
 
 def test_delete_file_err_404_path_doesnt_exist(fake_root):
@@ -345,7 +350,7 @@ def test_delete_file_err_404_path_doesnt_exist(fake_root):
     assert not path.exists()
 
     content = response.json()
-    assert content["detail"] == f"File at {path} not found"
+    assert content["detail"] == f"File at {path.as_posix()} not found"
 
 
 def test_delete_file_err_500_path_not_removed(fake_root):
@@ -360,4 +365,4 @@ def test_delete_file_err_500_path_not_removed(fake_root):
     assert path.exists()
 
     content = response.json()
-    assert content["detail"] == f"{path} could not be deleted: not in database"
+    assert content["detail"] == f"{path.as_posix()} could not be deleted: not in database"
