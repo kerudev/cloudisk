@@ -72,7 +72,7 @@ env_list = [
 [tool.tox.env_run_base]
 description = "Run test under {base_python}"
 
-set_env.COV_PATH = { replace = "env", name = "COVERAGE_FILE", default = "reports/coverage-{env:OS_NAME:local}-{env_name}.xml" }
+set_env.COV_PATH = { replace = "env", name = "COV_PATH", default = "reports/coverage-{env:OS_NAME:local}-{env_name}.xml" }
 
 commands = [
     ["uv", "sync", "--group", "test", "--active", "--no-config"],
