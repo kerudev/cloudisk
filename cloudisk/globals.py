@@ -2,10 +2,20 @@
 
 from pathlib import Path
 
-from cloudisk.tools.context import Context
-from cloudisk.tools.settings import Settings
+from cloudisk.tools import Context, Scope
+from cloudisk.vars import CLOUDISK_DB_PATH
 
-context = Context()
+root_scope = Scope(
+    "root",
+    engine_path=CLOUDISK_DB_PATH,
+    settings_module="cloudisk.tools._settings.default",
+)
 
-settings = Settings()
-settings.set_default(STATIC_PATH=str(Path(__file__).parent.parent / "templates" / "js"))
+root_scope.settings.set_default(
+    STATIC_PATH=str(Path(__file__).parent.parent / "templates" / "js")
+)
+
+# TMP
+settings = root_scope.settings
+
+context = Context(scopes=[root_scope])
