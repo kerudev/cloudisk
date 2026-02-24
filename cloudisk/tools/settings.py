@@ -58,10 +58,16 @@ class Settings:
         for key, value in kwargs.items():
             self._check_key(key)
 
-            if self.module:
-                self.module.__dict__.setdefault(key, value)
-            else:
+            if not self.module:
                 os.environ.setdefault(f"CLOUDISK_{key}", str(value))
+                continue
+
+            if key not in self.module.__dict__:
+                self.module.__dict__.setdefault(key, value)
+                continue
+
+            if isinstance(self.module.__dict__[key], type(Ellipsis)):
+                self.module.__dict__[key] = value
 
     def clear_cache(self):
         """Clear cache for all functions and properties inside the instance."""
