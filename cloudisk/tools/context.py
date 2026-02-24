@@ -1,21 +1,23 @@
-from sqlalchemy import create_engine
+from typing import Optional
 
-from cloudisk.vars import CLOUDISK_DB_PATH
+from cloudisk.tools.scope import Scope
 
 
 class Context:
-    def __init__(self):  # noqa: D107
-        self._engine = None
+    def __init__(self, scopes: Optional[dict[str, Scope] | list[Scope]]):  # noqa: D107
+        if scopes is None:
+            scopes = {}
 
-    def reset(self):
-        self._engine = None
+        if isinstance(scopes, list):
+            scopes = {scope.name: scope for scope in scopes}
 
-    @property
-    def engine(self):
-        if self._engine is None:
-            self._engine = self._create_engine()
+        self.scopes = scopes
 
-        return self._engine
+    def __getattr__(self, name: str):  # noqa: D105
+        return self.scopes.get(name)
 
-    def _create_engine(self):
-        return create_engine(f"sqlite:///{CLOUDISK_DB_PATH}")
+    def add_scope(self, scope: Scope):
+        self.scopes[scope.name] = scope
+
+    def drop_scope(self, name: str):
+        del self.scope[name]
