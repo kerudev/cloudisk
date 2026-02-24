@@ -5,7 +5,7 @@
 #########################
 
 # The path where the static files will be served from.
-STATIC_PATH = ""
+STATIC_PATH = ...
 
 
 #########################
@@ -13,7 +13,7 @@ STATIC_PATH = ""
 #########################
 
 # The email of the account that sends the account verifying email
-EMAIL_FROM = ""
+EMAIL_FROM = ...
 
 # The password of the account that sends the account verifying email
-PASS_FROM = ""
+PASS_FROM = ...
