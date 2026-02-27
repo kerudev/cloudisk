@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Field, Session, SQLModel
+from sqlmodel import Field, Session, SQLModel, select
 
 from cloudisk.db.models.base import ModelManager
 
@@ -59,3 +59,18 @@ class Space(ModelManager):
             session.refresh(space)
 
             return space
+
+    def list(self) -> list[str]:
+        """
+        List all instances of `SpaceModel`.
+
+        Returns
+        -------
+        list[str]
+            The names of the instances.
+        """
+        with Session(self.engine) as session:
+            statement = select(self.model.name)
+            results = session.exec(statement)
+
+            return results.all()
