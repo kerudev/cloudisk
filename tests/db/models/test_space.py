@@ -29,3 +29,14 @@ def test_create_raises_AlreadyExists():
 
     with pytest.raises(Space.AlreadyExists):
         manager.create(name="test", protect=True)
+
+
+def test_list():
+    manager = Space()
+
+    manager.create(name="test", protect=True)
+
+    result = manager.list()
+    execpted = ["test"]
+
+    assert result == execpted

@@ -1,16 +1,18 @@
 import os
 import shutil
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
+from cloudisk.db.models.space import Space
 from cloudisk.fs import commands
 from cloudisk.fs.commands import (
     _try_link,
     create_space,
     init_cloudisk_root,
     link_path,
+    list_spaces,
     unlink_path,
 )
 
@@ -23,6 +25,13 @@ def fake_root(tmp_path, monkeypatch) -> Path:
     monkeypatch.setattr("cloudisk.fs.commands.CLOUDISK_ROOT", fake_path)
 
     return fake_path
+
+
+@pytest.fixture
+def mock_echo(monkeypatch):
+    echo_mock = MagicMock()
+    monkeypatch.setattr("cloudisk.fs.commands.typer.echo", echo_mock)
+    return echo_mock
 
 
 def test_init_cloudisk_root_ok(fake_root):
@@ -222,3 +231,29 @@ def test_create_space_ask_remove_dir_is_False(fake_root):
         create_space(name=space_name, protect=True)
 
     assert space_path.exists()
+
+
+def test_list_spaces_full(fake_root):
+    Space().create(name="test", protect=False)
+
+    untracked = fake_root / "untracked"
+    untracked.mkdir()
+
+    list_spaces()
+
+
+def test_list_spaces_only_tracked(fake_root):
+    Space().create(name="test", protect=False)
+
+    list_spaces()
+
+
+def test_list_spaces_only_untracked(fake_root):
+    untracked = fake_root / "untracked"
+    untracked.mkdir()
+
+    list_spaces()
+
+
+def test_list_space_empty():
+    list_spaces()
