@@ -4,7 +4,13 @@ from typing import Annotated, Optional
 import typer
 
 from cloudisk.cli.vars import HEADER_ART
-from cloudisk.fs.commands import create_space, init_cloudisk_root, link_path, unlink_path
+from cloudisk.fs.commands import (
+    create_space,
+    init_cloudisk_root,
+    link_path,
+    list_spaces,
+    unlink_path,
+)
 from cloudisk.http import server
 from cloudisk.vars import CLOUDISK_ROOT
 
@@ -52,6 +58,11 @@ def create(
         typer.echo(f"{prompt_protect} [Y/N] {selected}")
 
     create_space(name, protect)
+
+
+@app.command(help="Lists all created spaces")
+def list():
+    list_spaces()
 
 
 @app.command(help=f"Creates a symlink inside '{CLOUDISK_ROOT}'")

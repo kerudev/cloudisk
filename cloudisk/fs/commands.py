@@ -1,11 +1,13 @@
 import os
 from pathlib import Path
 
+import typer
+
 from cloudisk.db.models import Space
 from cloudisk.fs.utils import ask_remove_dir, ask_remove_path
 from cloudisk.logger import get_logger
 from cloudisk.tools.settings import Settings
-from cloudisk.vars import CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_DB_FILE, CLOUDISK_ROOT
 
 logger = get_logger("cloudisk.fs")
 
@@ -121,3 +123,29 @@ def create_space(name: str, protect: bool) -> None:
     Space().create(name=name, protect=protect)
 
     logger.info(f"Created the '{name}' space")
+
+
+# TODO maybe a space is in the database but not found in ROOT
+def list_spaces() -> None:
+    spaces = Space().list()
+
+    if spaces:
+        typer.echo("Tracked spaces:")
+        for space in spaces:
+            typer.echo(f"- {space}")
+
+    root = os.listdir(CLOUDISK_ROOT)
+    root = [x for x in root if x != CLOUDISK_DB_FILE]
+
+    if len(root):
+        untracked = list(filter(lambda x: x not in spaces, root))
+
+        message = "Untracked spaces:"
+        if spaces:
+            message = "\n" + message
+
+        typer.echo(message)
+        for space in untracked:
+            typer.echo(f"- {space}")
+
+        return
