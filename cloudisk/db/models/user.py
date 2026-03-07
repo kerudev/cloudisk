@@ -3,12 +3,11 @@ from datetime import datetime
 from email.message import EmailMessage
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Relationship, Session, SQLModel, select
+from sqlmodel import Field, Relationship, Session, select
 
 from cloudisk.db.links import UserGroupLink
+from cloudisk.db.models.base import BaseModel, ModelManager
 from cloudisk.globals import settings
-
-from .base import ModelManager
 
 if TYPE_CHECKING:
     from cloudisk.db.models.group import GroupModel
@@ -16,10 +15,8 @@ if TYPE_CHECKING:
 # TODO save encrypted passwords
 
 
-class UserModel(SQLModel, table=True):
+class UserModel(BaseModel, table=True):
     __tablename__ = "user"
-
-    id: int = Field(primary_key=True)
 
     username: str = Field(unique=True)
     email: str = Field(unique=True)
@@ -93,6 +90,7 @@ class User(ModelManager):
                 raise User.EmailExists(f"Email '{email}' already exists")
 
             user = self.model(
+                space_id=self.scope.extras.get("space_id"),
                 username=username,
                 email=email,
                 password=password,

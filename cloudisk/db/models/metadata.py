@@ -3,16 +3,14 @@ from pathlib import Path
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Field, Session, SQLModel, select
+from sqlmodel import Field, Session, select
 
-from cloudisk.db.models.base import ModelManager
+from cloudisk.db.models.base import BaseModel, ModelManager
 from cloudisk.fs.utils import get_mime_type
 
 
-class MetadataModel(SQLModel, table=True):
+class MetadataModel(BaseModel, table=True):
     __tablename__ = "metadata"
-
-    id: int = Field(primary_key=True)
 
     path: str = Field(unique=True)
     size: int = 0
@@ -95,6 +93,7 @@ class Metadata(ModelManager):
             now = datetime.now()
 
             metadata = self.model(
+                space_id=self.scope.extras.get("space_id"),
                 path=path_str,
                 size=path.stat().st_size,
                 content_type=get_mime_type(path),
