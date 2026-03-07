@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
 
 from sqlalchemy import inspect
-from sqlmodel import SQLModel
+from sqlmodel import Field, SQLModel
 
 from cloudisk.globals import context
+
+
+class BaseModel(SQLModel):
+    id: int = Field(primary_key=True)
+    space_id: int = Field(default=None, index=True)
 
 
 class AbstractManager(ABC):
@@ -37,8 +42,10 @@ class AbstractManager(ABC):
 
 class ModelManager(AbstractManager):
     def __init__(self):  # noqa: D107
-        self.engine = context.engine
+        self.scope = getattr(self.__class__, "scope", context.root)
         self.model = getattr(self.__class__, "model", None)
+
+        self.engine = getattr(self.scope, "engine", None)
 
         SQLModel.metadata.create_all(self.engine)
 

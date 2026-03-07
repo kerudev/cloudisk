@@ -1,19 +1,16 @@
 from typing import TYPE_CHECKING, Optional
 
-from sqlmodel import Field, Relationship, Session, SQLModel, select
+from sqlmodel import Field, Relationship, Session, select
 
 from cloudisk.db.links import UserGroupLink
-
-from .base import ModelManager
+from cloudisk.db.models.base import BaseModel, ModelManager
 
 if TYPE_CHECKING:
     from cloudisk.db.models.user import UserModel
 
 
-class GroupModel(SQLModel, table=True):
+class GroupModel(BaseModel, table=True):
     __tablename__ = "group"
-
-    id: int = Field(primary_key=True)
 
     name: str = Field(unique=True)
 
@@ -56,7 +53,7 @@ class Group(ModelManager):
             if session.exec(query).one_or_none():
                 raise Group.AlreadyExists(f"Group '{name}' already exists")
 
-            group = self.model(name=name)
+            group = self.model(space_id=self.scope.extras.get("space_id"), name=name)
 
             session.add(group)
             session.commit()
