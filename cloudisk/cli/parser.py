@@ -10,6 +10,7 @@ from cloudisk.fs.commands import (
     link_path,
     list_spaces,
     unlink_path,
+    use_space,
 )
 from cloudisk.http import server
 from cloudisk.vars import CLOUDISK_ROOT
@@ -28,8 +29,8 @@ def init():
 @app.command(help=f"Creates a new space inside '{CLOUDISK_ROOT}'")
 def create(
     name: Annotated[
-        str,
-        typer.Option("--name", "-n", help="Name of the instance."),
+        Optional[str],
+        typer.Argument(help="Name of the instance."),
     ] = None,
     protect: Annotated[
         Optional[bool],
@@ -58,6 +59,16 @@ def create(
         typer.echo(f"{prompt_protect} [Y/N] {selected}")
 
     create_space(name, protect)
+
+
+@app.command(help=f"Use a space inside '{CLOUDISK_ROOT}'")
+def use(
+    name: Annotated[
+        str,
+        typer.Argument(help="Name of the instance."),
+    ],
+):
+    use_space(name)
 
 
 @app.command(help="Lists all created spaces")

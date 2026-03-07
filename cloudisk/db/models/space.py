@@ -1,5 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, select
+from sqlmodel import Field, Session, SQLModel, select
 
 from cloudisk.db.models.base import ModelManager
 
@@ -10,7 +11,8 @@ class SpaceModel(SQLModel, table=True):
     id: int = Field(primary_key=True)
 
     name: str = Field(unique=True)
-    protect: bool
+    used: bool = False
+    protect: bool = False
 
 
 class Space(ModelManager):
@@ -44,10 +46,9 @@ class Space(ModelManager):
             When a space already exists.
         """
         with Session(self.engine) as session:
-            space = self.model(
-                name=name,
-                protect=protect,
-            )
+            is_used = self.scope.extras.get("space_id") is None
+
+            space = self.model(name=name, protect=protect, used=is_used)
 
             session.add(space)
 
@@ -57,6 +58,78 @@ class Space(ModelManager):
                 raise Space.AlreadyExists(f"Space '{name}' already exist")
 
             session.refresh(space)
+
+            return space
+
+    def remove(self, name: str) -> None:
+        """
+        Remove a `SpaceModel` from the database.
+
+        Parameters
+        ----------
+        name: str
+            Name of the space.
+        """
+        with Session(self.engine) as session:
+            statement = select(self.model).where(self.model.name == name)
+            results = session.exec(statement)
+            space = results.one()
+
+            session.delete(space)
+            session.commit()
+
+    def use(self, name: str) -> SpaceModel:
+        """
+        Set `space.used` to `True`.
+
+        Parameters
+        ----------
+        name: str
+            Name of the space.
+
+        Returns
+        -------
+        SpaceModel
+            The modified instance.
+        """
+        with Session(self.engine) as session:
+            statement = select(self.model).where(self.model.used == 1)
+            results = session.exec(statement)
+            space = results.one_or_none()
+
+            if space:
+                if space.name == name:
+                    return space
+
+                space.used = False
+
+                session.add(space)
+                session.commit()
+
+            statement = select(self.model).where(self.model.name == name)
+            results = session.exec(statement)
+            space = results.one_or_none()
+
+            space.used = True
+
+            session.add(space)
+            session.commit()
+
+            return space
+
+    def used(self) -> SpaceModel:
+        """
+        Get the space where `space.used` is `True`.
+
+        Returns
+        -------
+        SpaceModel
+            The created instance.
+        """
+        with Session(self.engine) as session:
+            statement = select(self.model).where(self.model.used == 1)
+            results = session.exec(statement)
+            space = results.one_or_none()
 
             return space
 

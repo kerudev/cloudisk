@@ -3,11 +3,10 @@ from pathlib import Path
 
 import typer
 
-from cloudisk.db.models import Space
 from cloudisk.fs.utils import ask_remove_dir, ask_remove_path
 from cloudisk.logger import get_logger
 from cloudisk.tools.settings import Settings
-from cloudisk.vars import CLOUDISK_DB_FILE, CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_DB_FILE, CLOUDISK_ROOT, CLOUDISK_SETTINGS_FILE
 
 logger = get_logger("cloudisk.fs")
 
@@ -109,20 +108,42 @@ def unlink_path(path: Path) -> None:
 
 
 def create_space(name: str, protect: bool) -> None:
+    from cloudisk.db.models import Space
+
     if not CLOUDISK_ROOT.exists():
         init_cloudisk_root()
 
     space_path = CLOUDISK_ROOT / name
 
-    if space_path.exists() and not ask_remove_dir(space_path):
-        return
+    if space_path.exists():
+        if not ask_remove_dir(space_path):
+            return
+
+        Space().remove(name=name)
 
     space_path.mkdir()
 
-    Settings.build_module(space_path / "settings.py")
+    Settings.build_module(CLOUDISK_ROOT / CLOUDISK_SETTINGS_FILE)
     Space().create(name=name, protect=protect)
 
     logger.info(f"Created the '{name}' space")
+
+
+def use_space(name: str) -> None:
+    from cloudisk.db.models import Space
+
+    if not CLOUDISK_ROOT.exists():
+        init_cloudisk_root()
+
+    space_path = CLOUDISK_ROOT / name
+
+    if not space_path.exists():
+        logger.error(f"Space '{name}' doesn't exist.")
+        return
+
+    Space().use(name=name)
+
+    logger.info(f"Using space '{name}'")
 
 
 # TODO maybe a space is in the database but not found in ROOT
