@@ -1,9 +1,10 @@
-import importlib
 import os
 import shutil
 from functools import cache
 from pathlib import Path
 from typing import Any
+
+from cloudisk.vars import CLOUDISK_ROOT, CLOUDISK_SETTINGS_FILE
 
 from . import _settings
 
@@ -15,8 +16,29 @@ class Settings:
     class BadKeyFormat(Error):  # noqa: N818
         """Raised when the key's format or type is not correct."""
 
-    def __init__(self, module: str = None):  # noqa: D107
-        self.module = importlib.import_module(module) if module else None
+    class Incompatible(Error):  # noqa: N818
+        """Raised when the configuration keys are not compatible."""
+
+    def __init__(self, module: str = None, path: Path | str = None):  # noqa: D107
+        if module and path:
+            raise Settings.Incompatible(
+                "Module and path can't be provided at the same time."
+            )
+
+        if not module and not path:
+            self.module = None
+            self.path = CLOUDISK_ROOT / CLOUDISK_SETTINGS_FILE
+
+        if module:
+            import importlib
+
+            self.module = importlib.import_module(module) if module else None
+
+        elif path:
+            import importlib.util
+
+            spec = importlib.util.spec_from_file_location("settings", path)
+            self.module = importlib.util.module_from_spec(spec)
 
     def __getattr__(self, name: str):  # noqa: D105
         return self.get(name)
