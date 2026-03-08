@@ -6,10 +6,36 @@ from urllib.parse import quote
 
 from filetype import guess_mime
 
+from cloudisk.globals import context
 from cloudisk.logger import get_logger
 from cloudisk.vars import CLOUDISK_ROOT, MB_1
 
 logger = get_logger("cloudisk.fs")
+
+
+def get_space_root() -> Path:
+    """
+    Return the absolute path of the used space root.
+
+    Returns
+    -------
+    Path
+        The root directory of the space.
+    """
+    return path_resolve(CLOUDISK_ROOT / context.root.extras.get("space_name"))
+
+
+def build_space_path(path: Path) -> Path:
+    """
+    Return the absolute path inside the used space root.
+
+    Returns
+    -------
+    Path
+        The root directory of the space.
+    """
+    space_path = get_space_root() / path
+    return path_resolve(space_path)
 
 
 def get_mime_type(path: Path) -> str | None:
@@ -53,7 +79,7 @@ def is_subpath(child_path: Path, parent_path: Optional[Path] = None) -> bool:
         True if child path is subpath of parent path.
         False otherwise or if both paths are the same.
     """
-    parent_path = path_resolve(parent_path or CLOUDISK_ROOT)
+    parent_path = path_resolve(parent_path or get_space_root())
     child_path = path_resolve(child_path)
 
     if child_path == parent_path:
@@ -79,7 +105,7 @@ def is_parent_path(child_path: Path, parent_path: Optional[Path] = None) -> bool
         True if parent path is a superpath of child path.
         False otherwise or if both paths are the same.
     """
-    parent_path = path_resolve(parent_path or CLOUDISK_ROOT)
+    parent_path = path_resolve(parent_path or get_space_root())
     child_path = path_resolve(child_path)
 
     if child_path == parent_path:
@@ -100,7 +126,7 @@ def path_resolve(path: Path) -> Path:
 
     Returns
     -------
-    pathlib.Path
+    Path
         Resolved path or same one if path or any of its parents are symlinks.
     """
     if path.is_symlink():

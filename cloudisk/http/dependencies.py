@@ -2,8 +2,8 @@ from pathlib import Path
 
 from fastapi import HTTPException, Query
 
-from cloudisk.fs.utils import is_parent_path, path_resolve
-from cloudisk.vars import CLOUDISK_DB_PATH, CLOUDISK_ROOT
+from cloudisk.fs.utils import build_space_path, get_space_root, is_parent_path
+from cloudisk.vars import CLOUDISK_DB_PATH
 
 EXCLUDED_PATHS = [CLOUDISK_DB_PATH]
 
@@ -27,9 +27,9 @@ async def validate_path(path: Path = Query("")) -> Path:
     HTTPException
         If given path is backwards from the root directory or in excluded paths.
     """
-    storage_path = path_resolve(CLOUDISK_ROOT / path)
+    storage_path = build_space_path(path)
 
-    if storage_path == CLOUDISK_ROOT:
+    if storage_path == get_space_root():
         return path
 
     if is_parent_path(storage_path) or storage_path in EXCLUDED_PATHS:
