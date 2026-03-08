@@ -8,14 +8,15 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from cloudisk.db.models import Metadata
 from cloudisk.fs.utils import (
     attachment_content_disposition,
+    build_space_path,
     get_mime_type,
+    get_space_root,
     is_subpath,
     iter_file_chunks,
-    path_resolve,
 )
 from cloudisk.http.dependencies import validate_path
 from cloudisk.logger import logger
-from cloudisk.vars import CLOUDISK_DB_FILE, CLOUDISK_ROOT, MB_100
+from cloudisk.vars import CLOUDISK_DB_FILE, MB_100
 
 EXCLUDED_FILES = [CLOUDISK_DB_FILE]
 
@@ -67,7 +68,7 @@ async def _list_files(path: Path) -> JSONResponse:
 
     file_names = [file.name for file in files]
 
-    return JSONResponse({"files": file_names, "isRoot": path == CLOUDISK_ROOT})
+    return JSONResponse({"files": file_names, "isRoot": path == get_space_root()})
 
 
 async def _download_files(path: Path) -> FileResponse | StreamingResponse:
@@ -127,7 +128,7 @@ async def get_files(path: Path = Depends(validate_path)):
     path : Path
         Path that is being accessed.
     """
-    storage_path = path_resolve(CLOUDISK_ROOT / path)
+    storage_path = build_space_path(path)
 
     endpoint = _download_files if storage_path.is_file() else _list_files
     response = await endpoint(storage_path)
@@ -151,9 +152,11 @@ async def upload_file(files: list[UploadFile] = File(...)):
     files : list[UploadFile]
         List of files that are being uploaded.
     """
+    space_path = get_space_root()
+
     for file in files:
         filename = Path(file.filename)
-        path = CLOUDISK_ROOT / filename
+        path = space_path / filename
 
         if not is_subpath(path):
             raise HTTPException(403, f"You are not allowed to create {path.as_posix()}")
@@ -173,7 +176,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
             logger.error(f"There was an error while uploading {path}: {e}")
             os.remove(path)
 
-    return await _list_files(CLOUDISK_ROOT)
+    return await _list_files(space_path)
 
 
 @router.delete(
@@ -189,7 +192,7 @@ async def upload_file(files: list[UploadFile] = File(...)):
 async def delete_file(
     path: Path = Query(
         ...,
-        description=f"File or dir path to be deleted from {CLOUDISK_ROOT.as_posix()}",
+        description="File or dir path to be deleted from the selected space",
     ),
 ):
     """
@@ -213,7 +216,7 @@ async def delete_file(
     HTTPException - 500
         If an error occurs deleting the file or directory.
     """
-    storage_path = CLOUDISK_ROOT / path
+    storage_path = build_space_path(path)
 
     if not is_subpath(storage_path):
         raise HTTPException(
