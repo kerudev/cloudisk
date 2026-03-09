@@ -184,7 +184,7 @@ class User(ModelManager):
         msg["To"] = email
 
         if not (email_from := settings.EMAIL_FROM):
-            raise Exception("Please define CLOUDISK_EMAIL_FROM")
+            raise Exception("Please define EMAIL_FROM")
 
         msg["From"] = email_from
 

@@ -11,7 +11,6 @@ def fake_root(tmp_path, monkeypatch) -> Path:
     (tmp_path / "file1.txt").write_text("Test 1")
 
     monkeypatch.setattr("cloudisk.fs.utils.CLOUDISK_ROOT", tmp_path)
-    monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_ROOT", tmp_path)
 
     return tmp_path
 
