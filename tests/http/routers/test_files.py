@@ -35,8 +35,6 @@ def fake_root(tmp_path, monkeypatch) -> Path:
     dir1_file2.write_text("Test Dir1 2")
 
     monkeypatch.setattr("cloudisk.fs.utils.CLOUDISK_ROOT", tmp_path)
-    monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_ROOT", tmp_path)
-    monkeypatch.setattr("cloudisk.http.routers.files.CLOUDISK_ROOT", tmp_path)
 
     file_list = [
         file1,
