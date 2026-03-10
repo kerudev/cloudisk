@@ -29,6 +29,7 @@ def test_register():
 
     expected_user = {
         "id": 1,
+        "space_id": 999,
         "username": TEST_USER,
         "email": TEST_MAIL,
         "password": TEST_PASS,
@@ -58,6 +59,7 @@ def test_verify():
 
     expected_user = {
         "id": 1,
+        "space_id": 999,
         "username": TEST_USER,
         "email": TEST_MAIL,
         "password": TEST_PASS,
@@ -93,6 +95,7 @@ def test_login():
 
     expected_user = {
         "id": 1,
+        "space_id": 999,
         "username": TEST_USER,
         "email": TEST_MAIL,
         "password": TEST_PASS,
