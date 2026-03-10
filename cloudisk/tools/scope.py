@@ -64,6 +64,9 @@ class Scope:
             space = result.one_or_none()
 
             if not space:
+                count = session.exec(text("COUNT(*) FROM space"))
+                space = count
+
                 return
 
             space_id, space_name = space

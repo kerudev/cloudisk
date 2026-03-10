@@ -13,13 +13,25 @@ def fake_db(tmp_path, monkeypatch):
     tmp_db = tmp_path / CLOUDISK_DB_FILE
     monkeypatch.setattr("cloudisk.http.dependencies.CLOUDISK_DB_PATH", tmp_db)
 
-    monkeypatch.setattr("cloudisk.tools.scope.CLOUDISK_ROOT", tmp_path)
-
-    test_context = Context(scopes=[Scope("root", engine_path=tmp_db)])
-    test_context.root.update_space()
-
-    monkeypatch.setattr("cloudisk.globals.context", test_context)
-
-    yield tmp_db
+    return tmp_db
 
     # del test_context
+
+
+@pytest.fixture(autouse=True)
+def fake_context(tmp_path, monkeypatch, fake_db):
+    monkeypatch.setattr("cloudisk.vars.CLOUDISK_ROOT", tmp_path)
+
+    test_scope = Scope("root", engine_path=fake_db)
+
+    test_scope.extras["space_id"] = 999
+    test_scope.extras["space_name"] = "test_space"
+
+    (tmp_path / test_scope.extras["space_name"]).mkdir()
+
+    test_context = Context(scopes=[test_scope])
+
+    monkeypatch.setattr("cloudisk.globals.context", test_context)
+    monkeypatch.setattr("cloudisk.db.models.base.context", test_context)
+
+    return test_context

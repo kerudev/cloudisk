@@ -16,10 +16,11 @@ def mock_send_verify_email(monkeypatch, request):
     )
 
 
-def test__init__(fake_db):
+def test__init__(fake_context):
     manager = User()
 
-    assert str(manager.engine.url) == f"sqlite:///{fake_db}"
+    assert manager.engine.url == fake_context.root.engine.url
+    assert manager.scope == fake_context.root
     assert manager.model == UserModel
 
 
