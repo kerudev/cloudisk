@@ -32,6 +32,7 @@ def fake_context(tmp_path, monkeypatch, fake_db):
     test_context = Context(scopes=[test_scope])
 
     monkeypatch.setattr("cloudisk.globals.context", test_context)
+    monkeypatch.setattr("cloudisk.fs.utils.context", test_context)
     monkeypatch.setattr("cloudisk.db.models.base.context", test_context)
 
     return test_context

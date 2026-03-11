@@ -56,14 +56,14 @@ def mock_shutil_rmtree():
         yield mocked_rmtree
 
 
-def test_get_mime_type_from_file_returns_mime_type(mock_jpg_file: MagicMock):
+def test_get_mime_type_from_file_returns_mime_type(mock_jpg_file):
     path, expected = mock_jpg_file
     result = get_mime_type(path)
 
     assert result == expected
 
 
-def test_get_mime_type_from_path_returns_None(tmp_path: Path):
+def test_get_mime_type_from_path_returns_None(tmp_path):
     expected = None
     result = get_mime_type(tmp_path)
 
@@ -80,41 +80,41 @@ def test_get_mime_type_guess_mime_fails_returns_None():
     assert result is None
 
 
-def test_is_subpath_is_True(tmp_path: Path):
+def test_is_subpath_is_True(tmp_path):
     previous_path = (tmp_path / "..").resolve()
     assert is_subpath(tmp_path, previous_path) is True
 
 
-def test_is_subpath_is_False(tmp_path: Path):
+def test_is_subpath_is_False(tmp_path):
     previous_path = (tmp_path / "..").resolve()
     assert is_subpath(previous_path, tmp_path) is False
 
 
-def test_is_subpath_is_same(tmp_path: Path):
+def test_is_subpath_is_same(tmp_path):
     assert is_subpath(tmp_path, tmp_path) is False
 
 
-def test_is_parent_path_is_True(tmp_path: Path):
+def test_is_parent_path_is_True(tmp_path):
     previous_path = (tmp_path / "..").resolve()
     assert is_parent_path(previous_path, tmp_path) is True
 
 
-def test_is_parent_path_is_False(tmp_path: Path):
+def test_is_parent_path_is_False(tmp_path):
     previous_path = (tmp_path / "..").resolve()
     assert is_parent_path(tmp_path, previous_path) is False
 
 
-def test_is_parent_path_is_same(tmp_path: Path):
+def test_is_parent_path_is_same(tmp_path):
     assert is_parent_path(tmp_path, tmp_path) is False
 
 
-def test_path_resolve_is_symlink(tmp_path: Path):
+def test_path_resolve_is_symlink(tmp_path):
     symlink = tmp_path / "symlink"
     os.symlink(tmp_path, symlink)
     assert path_resolve(symlink) == symlink
 
 
-def test_path_resolve_parent_is_symlink(tmp_path: Path):
+def test_path_resolve_parent_is_symlink(tmp_path):
     symlink = tmp_path / "symlink"
     os.symlink(tmp_path, symlink)
     tmp_file = symlink / "tmp_file"
@@ -122,8 +122,8 @@ def test_path_resolve_parent_is_symlink(tmp_path: Path):
 
 
 def test_remove_file_logs_error_and_then_returns_False(
-    mock_jpg_file: MagicMock,
-    mock_logger_error: MagicMock,
+    mock_jpg_file,
+    mock_logger_error,
 ):
     path, _ = mock_jpg_file
 
@@ -134,7 +134,7 @@ def test_remove_file_logs_error_and_then_returns_False(
         mock_logger_error.assert_called_once()
 
 
-def test_remove_file_returns_True(mock_jpg_file: MagicMock, mock_path_unlink: MagicMock):
+def test_remove_file_returns_True(mock_jpg_file, mock_path_unlink):
     path, _ = mock_jpg_file
 
     responses = iter(("y"))
@@ -145,8 +145,8 @@ def test_remove_file_returns_True(mock_jpg_file: MagicMock, mock_path_unlink: Ma
 
 
 def test_remove_dir_logs_error_and_then_returns_False(
-    tmp_path: Path,
-    mock_logger_error: MagicMock,
+    tmp_path,
+    mock_logger_error,
 ):
     responses = iter(("no", "n"))
     with patch("builtins.input", side_effect=lambda _: next(responses)):
@@ -155,17 +155,19 @@ def test_remove_dir_logs_error_and_then_returns_False(
         mock_logger_error.assert_called_once()
 
 
-def test_remove_dir_when_empty_returns_True(tmp_path: Path, mock_path_rmdir: MagicMock):
+def test_remove_dir_when_empty_returns_True(tmp_path, fake_context, mock_path_rmdir):
+    space_name = fake_context.root.extras["space_name"]
     responses = iter(("y"))
+
     with patch("builtins.input", side_effect=lambda _: next(responses)):
-        result = ask_remove_dir(tmp_path)
+        result = ask_remove_dir(tmp_path / space_name)
         assert result is True
         mock_path_rmdir.assert_called_once()
 
 
 def test_remove_dir_when_not_empty_returns_True(
-    tmp_path: Path,
-    mock_shutil_rmtree: MagicMock,
+    tmp_path,
+    mock_shutil_rmtree,
 ):
     (tmp_path / "tmp_file").touch()
 
@@ -176,7 +178,7 @@ def test_remove_dir_when_not_empty_returns_True(
         mock_shutil_rmtree.assert_called_once()
 
 
-def test_remove_path_when_file(mock_jpg_file: MagicMock, mock_path_unlink: MagicMock):
+def test_remove_path_when_file(mock_jpg_file, mock_path_unlink):
     responses = iter(("y"))
     with patch("builtins.input", side_effect=lambda _: next(responses)):
         path, _ = mock_jpg_file
@@ -184,14 +186,16 @@ def test_remove_path_when_file(mock_jpg_file: MagicMock, mock_path_unlink: Magic
         mock_path_unlink.assert_called_once()
 
 
-def test_remove_path_when_path(tmp_path: Path, mock_path_rmdir: MagicMock):
+def test_remove_path_when_path(tmp_path, fake_context, mock_path_rmdir):
+    space_name = fake_context.root.extras["space_name"]
     responses = iter(("y"))
+
     with patch("builtins.input", side_effect=lambda _: next(responses)):
-        assert ask_remove_path(tmp_path) is True
+        assert ask_remove_path(tmp_path / space_name) is True
         mock_path_rmdir.assert_called_once()
 
 
-def test_remove_path_raises_exception(tmp_path: Path):
+def test_remove_path_raises_exception(tmp_path):
     fake_path = tmp_path / "tmp_socket.sock"
     exception_text = (
         f"{fake_path.as_posix()} already exists and is not a file or a directory. "
@@ -216,7 +220,7 @@ def test_attachment_content_disposition_returns_formatted_filename():
     assert attachment_content_disposition(file_name) == expected
 
 
-def test_iter_file_chunks_yield_chunk(tmp_path: Path):
+def test_iter_file_chunks_yield_chunk(tmp_path):
     fake_data = b"123456789"
     chunk_size = 4
 

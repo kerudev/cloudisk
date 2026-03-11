@@ -7,12 +7,15 @@ from cloudisk.http.dependencies import validate_path
 
 
 @pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch) -> Path:
-    (tmp_path / "file1.txt").write_text("Test 1")
+def fake_root(tmp_path, monkeypatch, fake_context) -> Path:
+    space_name = fake_context.root.extras["space_name"]
+    space_path = tmp_path / space_name
+
+    (space_path / "file1.txt").write_text("Test 1")
 
     monkeypatch.setattr("cloudisk.fs.utils.CLOUDISK_ROOT", tmp_path)
 
-    return tmp_path
+    return space_path
 
 
 @pytest.mark.asyncio

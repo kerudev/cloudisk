@@ -1,18 +1,17 @@
 """Contains global variables that refer to the global state in runtime."""
 
+import os
 from pathlib import Path
 
 from cloudisk.tools import Context, Scope
 from cloudisk.vars import CLOUDISK_DB_PATH
 
-root = Scope("root", engine_path=CLOUDISK_DB_PATH)
-
-root.update_space()
-root.settings.set_default(
-    STATIC_PATH=str(Path(__file__).parent.parent / "templates" / "js")
+os.environ.setdefault(
+    "CLOUDISK_STATIC_PATH",
+    str(Path(__file__).parent.parent / "templates" / "js"),
 )
 
-context = Context(scopes=[root])
+context = Context(scopes=[Scope("root", engine_path=CLOUDISK_DB_PATH)])
 
 # TMP
-settings = root.settings
+settings = context.root.settings
