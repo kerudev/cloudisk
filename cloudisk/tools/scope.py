@@ -45,16 +45,16 @@ class Scope:
 
         return self._settings
 
-    def set_engine(self, path: str | Path = None):
+    def set_engine(self, path: Optional[str | Path] = None):
         if path is None:
             path = self.engine_path
-
-        if isinstance(path, Path):
-            path = str(path)
 
         self._engine = self._create_engine(path)
 
     def update_space(self):
+        if not self.engine:
+            return
+
         if not inspect(self.engine).has_table("space"):
             return
 
@@ -82,7 +82,10 @@ class Scope:
         self._engine.dispose()
         self._engine = None
 
-    def _create_engine(self, path: str):
+    def _create_engine(self, path: Path):
         from sqlalchemy import create_engine
 
-        return create_engine(f"sqlite:///{path}")
+        if not path.parent.exists():
+            path.parent.mkdir()
+
+        return create_engine(f"sqlite:///{str(path)}")

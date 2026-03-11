@@ -15,17 +15,20 @@ client = TestClient(app)
 
 
 @pytest.fixture(autouse=True)
-def fake_root(tmp_path, monkeypatch) -> Path:
-    file1 = tmp_path / "file1.txt"
+def fake_root(tmp_path, monkeypatch, fake_context) -> Path:
+    space_name = fake_context.root.extras["space_name"]
+    space_path = tmp_path / space_name
+
+    file1 = space_path / "file1.txt"
     file1.write_text("Test 1")
 
-    file2 = tmp_path / "file2.fake"
+    file2 = space_path / "file2.fake"
     file2.write_text("Test 2")
 
-    link1 = tmp_path / "link1.txt"
-    link1.symlink_to(tmp_path / "file1.txt")
+    link1 = space_path / "link1.txt"
+    link1.symlink_to(space_path / "file1.txt")
 
-    dir1 = tmp_path / "dir1"
+    dir1 = space_path / "dir1"
     dir1.mkdir()
 
     dir1_file1 = dir1 / "dir1_file1.txt"
@@ -50,7 +53,7 @@ def fake_root(tmp_path, monkeypatch) -> Path:
     for file in file_list:
         fake_metadata.create(file)
 
-    return tmp_path
+    return space_path
 
 
 @pytest.fixture
@@ -336,7 +339,8 @@ def test_delete_file_err_403_subpath(fake_root):
     assert not path.exists()
 
     content = response.json()
-    assert content["detail"] == f"You are not allowed to delete {path.as_posix()}"
+    path = path.resolve().as_posix()
+    assert content["detail"] == f"You are not allowed to delete {path}"
 
 
 def test_delete_file_err_404_path_doesnt_exist(fake_root):
