@@ -148,25 +148,29 @@ def use_space(name: str) -> None:
 
 # TODO maybe a space is in the database but not found in ROOT
 def list_spaces() -> None:
+    from cloudisk.db.models import Space
+
     spaces = Space().list()
+    used = Space().get_used()
 
     if spaces:
         typer.echo("Tracked spaces:")
         for space in spaces:
-            typer.echo(f"- {space}")
+            if space == used.name:
+                typer.echo(f"+ {space} (used)")
+            else:
+                typer.echo(f"- {space}")
 
     root = os.listdir(CLOUDISK_ROOT)
-    root = [x for x in root if x != CLOUDISK_DB_FILE]
+    root = [x for x in root if x not in [CLOUDISK_DB_FILE, CLOUDISK_SETTINGS_FILE]]
 
-    if len(root):
-        untracked = list(filter(lambda x: x not in spaces, root))
+    untracked = list(filter(lambda x: x not in spaces, root))
 
-        message = "Untracked spaces:"
-        if spaces:
-            message = "\n" + message
+    message = "Untracked spaces:"
+    if spaces:
+        message = "\n" + message
 
+    if untracked:
         typer.echo(message)
         for space in untracked:
             typer.echo(f"- {space}")
-
-        return

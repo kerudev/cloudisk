@@ -266,7 +266,11 @@ def test_use_space_that_doesnt_exist(fake_root):
 
 
 def test_list_spaces_full(fake_root):
-    Space().create(name="test", protect=False)
+    manager = Space()
+
+    manager.create(name="foo", protect=False)
+    manager.create(name="bar", protect=False)
+    manager.create(name="baz", protect=False)
 
     untracked = fake_root / "untracked"
     untracked.mkdir()
@@ -274,7 +278,7 @@ def test_list_spaces_full(fake_root):
     list_spaces()
 
 
-def test_list_spaces_only_tracked(fake_root):
+def test_list_spaces_only_tracked():
     Space().create(name="test", protect=False)
 
     list_spaces()

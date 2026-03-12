@@ -1,4 +1,5 @@
 import pytest
+from sqlmodel import Session
 
 from cloudisk.db.models.space import Space, SpaceModel
 
@@ -17,6 +18,22 @@ def test_create_ok():
     space = manager.create(name="test", protect=True)
 
     assert space.name == "test"
+    assert space.protect is True
+    assert space.used is True
+
+
+def test_create_second_space():
+    manager = Space()
+
+    space = manager.create(name="foo", protect=True)
+
+    assert space.name == "foo"
+    assert space.protect is True
+    assert space.used is True
+
+    space = manager.create(name="bar", protect=True)
+
+    assert space.name == "bar"
     assert space.protect is True
     assert space.used is False
 
@@ -59,6 +76,24 @@ def test_use_when_space_is_already_used():
 
     manager.create(name="test1", protect=True)
     manager.use(name="test1")
+    space = manager.use(name="test1")
+
+    assert space.name == "test1"
+    assert space.protect is True
+    assert space.used is True
+
+
+def test_use_when_no_space_is_used():
+    manager = Space()
+
+    space = manager.create(name="test1", protect=True)
+
+    with Session(manager.engine) as session:
+        space.used = False
+
+        session.add(space)
+        session.commit()
+
     space = manager.use(name="test1")
 
     assert space.name == "test1"
