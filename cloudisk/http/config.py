@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from typing import Any, Mapping
 
 from fastapi import FastAPI, HTTPException, Request
@@ -5,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from cloudisk.db.models import Metadata, User
+from cloudisk.globals import context
 from cloudisk.http.routers import auth, files, root
 from cloudisk.http.vars import CLOUDISK_STATIC
 from cloudisk.logger import get_logger
@@ -21,8 +23,15 @@ API_CONFIG: Mapping[str, Any] = {
 # Global API logger
 logger = get_logger("cloudisk.api")
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):  # pragma: no cover
+    context.root.update_space()
+    yield
+
+
 # Initialize app
-app = FastAPI(**API_CONFIG)
+app = FastAPI(lifespan=lifespan, **API_CONFIG)
 
 # Include routers in app
 app.include_router(auth.router)

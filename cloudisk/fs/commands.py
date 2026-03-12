@@ -107,7 +107,7 @@ def unlink_path(path: Path) -> None:
     logger.info(f"Unlinked '{path}'")
 
 
-def create_space(name: str, protect: bool) -> None:
+def create_space(name: str, protect: bool = False) -> None:
     from cloudisk.db.models import Space
 
     if not CLOUDISK_ROOT.exists():
@@ -121,7 +121,7 @@ def create_space(name: str, protect: bool) -> None:
 
         Space().remove(name=name)
 
-    space_path.mkdir()
+    space_path.mkdir(exist_ok=True)
 
     Settings.build_module(CLOUDISK_ROOT / CLOUDISK_SETTINGS_FILE)
     Space().create(name=name, protect=protect)
@@ -133,7 +133,7 @@ def use_space(name: str) -> None:
     from cloudisk.db.models import Space
 
     if not CLOUDISK_ROOT.exists():
-        init_cloudisk_root()
+        init_cloudisk_root()  # pragma: no cover
 
     space_path = CLOUDISK_ROOT / name
 

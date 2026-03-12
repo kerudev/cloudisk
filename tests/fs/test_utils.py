@@ -11,12 +11,15 @@ from cloudisk.fs.utils import (
     ask_remove_file,
     ask_remove_path,
     attachment_content_disposition,
+    build_space_path,
     get_mime_type,
+    get_space_root,
     is_parent_path,
     is_subpath,
     iter_file_chunks,
     path_resolve,
 )
+from cloudisk.vars import CLOUDISK_ROOT
 
 
 @pytest.fixture
@@ -54,6 +57,20 @@ def mock_path_rmdir():
 def mock_shutil_rmtree():
     with patch("shutil.rmtree") as mocked_rmtree:
         yield mocked_rmtree
+
+
+def test_get_space_root(fake_context):
+    result = get_space_root()
+    expected = CLOUDISK_ROOT / fake_context.root.extras["space_name"]
+
+    assert result == expected
+
+
+def test_build_space_path(fake_context):
+    result = build_space_path("test_path")
+    expected = CLOUDISK_ROOT / fake_context.root.extras["space_name"] / "test_path"
+
+    assert result == expected
 
 
 def test_get_mime_type_from_file_returns_mime_type(mock_jpg_file):

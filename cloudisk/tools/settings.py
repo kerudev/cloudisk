@@ -26,19 +26,22 @@ class Settings:
             )
 
         if not module and not path:
-            self.module = None
-            self.path = CLOUDISK_ROOT / CLOUDISK_SETTINGS_FILE
+            module = None
+            path = CLOUDISK_ROOT / CLOUDISK_SETTINGS_FILE
 
         if module:
             import importlib
 
-            self.module = importlib.import_module(module) if module else None
+            self.module = importlib.import_module(module)
+            self.path = Path(self.module.__file__)
+            return
 
-        elif path:
-            import importlib.util
+        import importlib.util
 
-            spec = importlib.util.spec_from_file_location("settings", path)
-            self.module = importlib.util.module_from_spec(spec)
+        spec = importlib.util.spec_from_file_location("settings", path)
+
+        self.module = importlib.util.module_from_spec(spec)
+        self.path = Path(path)
 
     def __getattr__(self, name: str):  # noqa: D105
         return self.get(name)

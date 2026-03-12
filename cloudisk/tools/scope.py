@@ -9,6 +9,12 @@ from cloudisk.vars import CLOUDISK_ROOT, CLOUDISK_SETTINGS_FILE
 
 
 class Scope:
+    class Error(Exception):
+        """Raised when the problem doesn't fit any of the other exceptions."""
+
+    class NoSpace(Error):  # noqa: N818
+        """Raised when there is no space associated to this scope."""
+
     def __init__(  # noqa: D107
         self,
         name: str,
@@ -46,17 +52,16 @@ class Scope:
         return self._settings
 
     def set_engine(self, path: Optional[str | Path] = None):
-        if path is None:
-            path = self.engine_path
-
         self._engine = self._create_engine(path)
 
     def update_space(self):
         if not self.engine:
-            return
+            return  # pragma: no cover
 
         if not inspect(self.engine).has_table("space"):
-            return
+            raise Scope.NoSpace(
+                "Create a space before running cloudisk. More info: 'cloudisk create -h'"
+            )
 
         with Session(self.engine) as session:
             # Query without using the Space model manager to avoid circular imports
@@ -64,10 +69,9 @@ class Scope:
             space = result.one_or_none()
 
             if not space:
-                count = session.exec(text("COUNT(*) FROM space"))
-                space = count
-
-                return
+                raise Scope.NoSpace(
+                    "There is no space defined as used. More info: 'cloudisk use -h'"
+                )
 
             space_id, space_name = space
 
@@ -82,10 +86,13 @@ class Scope:
         self._engine.dispose()
         self._engine = None
 
-    def _create_engine(self, path: Path):
+    def _create_engine(self, path: Optional[Path] = None):
         from sqlalchemy import create_engine
 
+        if path is None:
+            path = self.engine_path
+
         if not path.parent.exists():
-            path.parent.mkdir()
+            path.parent.mkdir()  # pragma: no cover
 
         return create_engine(f"sqlite:///{str(path)}")

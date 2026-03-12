@@ -15,12 +15,11 @@ def fake_db(tmp_path, monkeypatch):
 
     return tmp_db
 
-    # del test_context
-
 
 @pytest.fixture(autouse=True)
 def fake_context(tmp_path, monkeypatch, fake_db):
     monkeypatch.setattr("cloudisk.vars.CLOUDISK_ROOT", tmp_path)
+    monkeypatch.setattr("cloudisk.tools.settings.CLOUDISK_ROOT", tmp_path)
 
     test_scope = Scope("root", engine_path=fake_db)
 

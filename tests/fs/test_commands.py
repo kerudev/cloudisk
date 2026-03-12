@@ -14,6 +14,7 @@ from cloudisk.fs.commands import (
     link_path,
     list_spaces,
     unlink_path,
+    use_space,
 )
 
 
@@ -231,6 +232,37 @@ def test_create_space_ask_remove_dir_is_False(fake_root):
         create_space(name=space_name, protect=True)
 
     assert space_path.exists()
+
+
+def test_create_space_ask_remove_dir_is_True(fake_root):
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    create_space(name=space_name, protect=True)
+
+    with patch.object(commands, "ask_remove_dir", return_value=True):
+        create_space(name=space_name, protect=True)
+
+    assert space_path.exists()
+
+
+def test_use_space(fake_root):
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    create_space(space_name)
+    use_space(space_name)
+
+    assert space_path.exists()
+
+
+def test_use_space_that_doesnt_exist(fake_root):
+    space_name = "test"
+    space_path = fake_root / space_name
+
+    use_space(space_name)
+
+    assert not space_path.exists()
 
 
 def test_list_spaces_full(fake_root):

@@ -24,7 +24,7 @@ class Space(ModelManager):
     class AlreadyExists(Error):  # noqa: N818
         """Raised when the space already exists."""
 
-    def create(self, name: str, protect: bool) -> SpaceModel:
+    def create(self, name: str, protect: bool = False) -> SpaceModel:
         """
         Create a `SpaceModel` instance.
 
@@ -32,7 +32,7 @@ class Space(ModelManager):
         ----------
         name: str
             Name of the space.
-        protect: bool
+        protect: bool = False
             Marks the space as protected with user login.
 
         Returns
@@ -114,10 +114,11 @@ class Space(ModelManager):
 
             session.add(space)
             session.commit()
+            session.refresh(space)
 
             return space
 
-    def used(self) -> SpaceModel:
+    def get_used(self) -> SpaceModel:
         """
         Get the space where `space.used` is `True`.
 
