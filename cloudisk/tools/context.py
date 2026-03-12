@@ -4,7 +4,7 @@ from cloudisk.tools.scope import Scope
 
 
 class Context:
-    def __init__(self, scopes: Optional[dict[str, Scope] | list[Scope]]):  # noqa: D107
+    def __init__(self, scopes: Optional[dict[str, Scope] | list[Scope]] = None):  # noqa: D107
         if scopes is None:
             scopes = {}
 
@@ -20,4 +20,4 @@ class Context:
         self.scopes[scope.name] = scope
 
     def drop_scope(self, name: str):
-        del self.scope[name]
+        self.scopes.pop(name, None)

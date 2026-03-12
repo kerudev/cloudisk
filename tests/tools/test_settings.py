@@ -13,13 +13,24 @@ CONFTEST_MODULE = "tests.conftest"
 def test__init__env():
     instance = Settings()
 
-    assert instance.module is None
+    assert instance.module is not None
 
 
 def test__init__module():
-    instance = Settings(CONFTEST_MODULE)
+    instance = Settings(module=CONFTEST_MODULE)
 
     assert isinstance(instance.module, ModuleType)
+
+
+def test__init__path():
+    instance = Settings(path=__file__)
+
+    assert isinstance(instance.module, ModuleType)
+
+
+def test__init__raises_Incompatible():
+    with pytest.raises(Settings.Incompatible):
+        Settings(module=CONFTEST_MODULE, path=__file__)
 
 
 def test_get_env():
@@ -50,6 +61,7 @@ def test_get_module():
 
 def test_set_default_env():
     instance = Settings()
+    instance.module = None
 
     instance.set_default(FOO="test", BAR=CLOUDISK_ROOT, TEST_MAIL="another@mail.com")
 
@@ -60,6 +72,18 @@ def test_set_default_env():
 
 def test_set_default_module():
     instance = Settings(CONFTEST_MODULE)
+
+    instance.set_default(FOO="test", BAR=CLOUDISK_ROOT, TEST_MAIL="another@mail.com")
+
+    assert instance.FOO == instance.module.FOO == "test"
+    assert instance.BAR == instance.module.BAR == CLOUDISK_ROOT
+    assert instance.TEST_MAIL == TEST_MAIL
+
+
+def test_set_default_ellipsis():
+    instance = Settings(CONFTEST_MODULE)
+    instance.module.FOO = ...
+    instance.module.BAR = ...
 
     instance.set_default(FOO="test", BAR=CLOUDISK_ROOT, TEST_MAIL="another@mail.com")
 

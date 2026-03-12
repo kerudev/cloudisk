@@ -124,9 +124,11 @@ def test_one_or_none_returns_None():
 @pytest.mark.no_mock
 def test_send_verify_email_ok(monkeypatch):
     mock_smtp = MagicMock()
+    mock_settings = MagicMock()
+    mock_settings.EMAIL_FROM = TEST_MAIL
 
     monkeypatch.setattr("cloudisk.db.models.user.smtplib.SMTP", mock_smtp)
-    monkeypatch.setenv("CLOUDISK_EMAIL_FROM", TEST_MAIL)
+    monkeypatch.setattr("cloudisk.db.models.user.settings", mock_settings)
 
     User()._send_verify_email(email=TEST_MAIL)
 
@@ -134,6 +136,6 @@ def test_send_verify_email_ok(monkeypatch):
 
 
 @pytest.mark.no_mock
-def test_send_verify_email_raises_Exception():
-    with pytest.raises(Exception):
+def test_send_verify_email_raises_Error():
+    with pytest.raises(User.Error):
         User()._send_verify_email(email=TEST_MAIL)

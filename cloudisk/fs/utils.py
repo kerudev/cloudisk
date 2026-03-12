@@ -22,7 +22,7 @@ def get_space_root() -> Path:
     Path
         The root directory of the space.
     """
-    return path_resolve(CLOUDISK_ROOT / context.root.extras.get("space_name"))
+    return path_resolve(CLOUDISK_ROOT / context.root.extras["space_name"])
 
 
 def build_space_path(path: Path) -> Path:

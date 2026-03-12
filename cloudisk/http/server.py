@@ -3,7 +3,6 @@ from pathlib import Path
 import uvicorn
 
 import cloudisk
-from cloudisk.globals import context
 
 
 def run(host: str = "0.0.0.0", port: int = 8000) -> None:
@@ -17,8 +16,6 @@ def run(host: str = "0.0.0.0", port: int = 8000) -> None:
     port : int
         Port to run server in. By default, 8000.
     """
-    context.root.update_space()
-
     uvicorn.run(
         app="cloudisk.http.config:app",
         host=host,
