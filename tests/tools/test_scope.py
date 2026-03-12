@@ -1,4 +1,5 @@
 import pytest
+from sqlmodel import Session
 
 from cloudisk.db.models.space import Space
 from cloudisk.tools.scope import Scope
@@ -75,7 +76,13 @@ def test_update_space_no_space_table(fake_db):
 
 def test_update_space_no_space_used(fake_db):
     manager = Space()
-    manager.create(name="foo")
+    space = manager.create(name="foo")
+
+    with Session(manager.engine) as session:
+        space.used = False
+
+        session.add(space)
+        session.commit()
 
     instance = Scope("test", engine_path=fake_db)
 

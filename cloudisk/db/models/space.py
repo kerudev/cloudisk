@@ -1,6 +1,5 @@
 from sqlalchemy.exc import IntegrityError
 from sqlmodel import Field, Session, SQLModel, select
-from sqlmodel import Field, Session, SQLModel, select
 
 from cloudisk.db.models.base import ModelManager
 
@@ -46,8 +45,11 @@ class Space(ModelManager):
             When a space already exists.
         """
         with Session(self.engine) as session:
-            is_used = self.scope.extras.get("space_id") is None
+            statement = select(self.model).where(self.model.used)
+            results = session.exec(statement)
+            used_space = results.one_or_none()
 
+            is_used = not used_space
             space = self.model(name=name, protect=protect, used=is_used)
 
             session.add(space)
