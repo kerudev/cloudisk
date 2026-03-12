@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "cloudisk"
-version = "0.1.0"
+version = "0.2.0"
 description = "A decentralized content distribution system. Run your own cloud."
 readme = "README.md"
 license = "MIT"
@@ -54,9 +54,6 @@ build = [
     "twine>=6.2.0",
     "build>=1.4.0",
 ]
-
-[tool.setuptools.dynamic]
-version = {attr = "cloudisk.__version__"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
