@@ -1,5 +1,7 @@
 from pathlib import Path
 
+VERSION = (0, 2, 0)
+
 CLOUDISK_ROOT = Path.home() / ".cloudisk"
 
 CLOUDISK_DB_FILE = ".cloudisk.db"
