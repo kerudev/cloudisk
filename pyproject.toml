@@ -55,6 +55,9 @@ build = [
     "build>=1.4.0",
 ]
 
+[tool.setuptools.dynamic]
+version = {attr = "cloudisk.__version__"}
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]

@@ -13,7 +13,7 @@ from cloudisk.fs.commands import (
     use_space,
 )
 from cloudisk.http import server
-from cloudisk.vars import CLOUDISK_ROOT
+from cloudisk.vars import CLOUDISK_ROOT, VERSION
 
 app = typer.Typer(
     name="cloudisk",
@@ -21,12 +21,35 @@ app = typer.Typer(
 )
 
 
+def version_cb(value: bool):
+    if value:
+        version = ".".join(str(x) for x in VERSION)
+        typer.echo(f"cloudisk v{version}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: Annotated[
+        bool | None,
+        typer.Option(
+            "--version",
+            "-v",
+            help="Print the version number",
+            callback=version_cb,
+            is_eager=True,
+        ),
+    ] = None,
+):
+    pass
+
+
 @app.command(help=f"Creates the basic scaffolding at '{CLOUDISK_ROOT}'")
 def init():
     init_cloudisk_root()
 
 
-@app.command(help=f"Creates a new space inside '{CLOUDISK_ROOT}'")
+@app.command(help="Creates a new space")
 def create(
     name: Annotated[
         Optional[str],
@@ -61,7 +84,7 @@ def create(
     create_space(name, protect)
 
 
-@app.command(help=f"Use a space inside '{CLOUDISK_ROOT}'")
+@app.command(help="Change the used space")
 def use(
     name: Annotated[
         str,
@@ -76,7 +99,7 @@ def list():
     list_spaces()
 
 
-@app.command(help=f"Creates a symlink inside '{CLOUDISK_ROOT}'")
+@app.command(help=f"Creates a symlink (soft) inside '{CLOUDISK_ROOT}'")
 def link(
     path: Annotated[
         Path,
@@ -99,7 +122,7 @@ def link(
     link_path(path, recursive)
 
 
-@app.command(help=f"Removes a symlink inside '{CLOUDISK_ROOT}'")
+@app.command(help=f"Removes a symlink (soft) inside '{CLOUDISK_ROOT}'")
 def unlink(
     path: Annotated[
         Path,
