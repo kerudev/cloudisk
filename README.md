@@ -28,10 +28,34 @@ To install cloudisk, use `pip install cloudisk`.
 After installing, you can run `cloudisk -h` to get the full commands list and
 a their description. Use `cloudisk <command> -h` to get help about their flags.
 
-Use `cloudisk run` to start the web server at `127.0.0.1:8000`.
+Cloudisk works with `spaces`, which are isolated server instances.
+Run `cloudisk create` to make a new space.
 
-## Environment variables
+Then, use `cloudisk run` to start the web server at `127.0.0.1:8000`.
 
-The following env vars are used by cloudisk:
+If you want to use a different space, run `cloudisk use [NAME]`.
 
-- `CLOUDISK_STATIC`: the path of the static files that will be served.
+## Configuration
+
+As mentioned before, cloudisk manages different server instances with spaces.
+
+These spaces, the cloudisk database and the settings module are located in your
+home directory:
+
+- Linux: `$HOME/.cloudisk`
+- macOS: `$HOME/.cloudisk`
+- Windows: `%USERPROFILE%/.cloudisk`
+
+The `.cloudisk` directory is created automatically, but you can also use
+`cloudisk init` to generate it.
+
+Right now, all spaces share the same database and settings module. In the
+future, each space will have it's own settings module.
+
+The settings module is just a Python file that contains some optional variables:
+- `STATIC_PATH`: the path where the static files will be served from.
+- `EMAIL_FROM`: the email of the account that sends the account verification email.
+- `PASS_FROM`: the password of the account that sends the account verification email.
+
+You can also set them up as environment variables by adding `CLOUDISK_` prefix
+to the variable name. Eg.: `CLOUDISK_EMAIL_FROM`
