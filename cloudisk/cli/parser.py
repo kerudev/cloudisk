@@ -4,15 +4,6 @@ from typing import Annotated, Optional
 import typer
 
 from cloudisk.cli.vars import HEADER_ART
-from cloudisk.fs.commands import (
-    create_space,
-    init_cloudisk_root,
-    link_path,
-    list_spaces,
-    unlink_path,
-    use_space,
-)
-from cloudisk.http import server
 from cloudisk.vars import CLOUDISK_ROOT, VERSION
 
 app = typer.Typer(
@@ -46,24 +37,33 @@ def main(
 
 @app.command(help=f"Creates the basic scaffolding at '{CLOUDISK_ROOT}'")
 def init():
+    from cloudisk.fs.commands import init_cloudisk_root
+
     init_cloudisk_root()
 
 
-@app.command(help="Creates a new space")
+@app.command(help=f"Creates a new space inside '{CLOUDISK_ROOT}'")
 def create(
     name: Annotated[
         Optional[str],
-        typer.Argument(help="Name of the instance."),
+        typer.Argument(
+            help=(
+                "Name of the instance. "
+                "If this is the first created space, it's used by default."
+            )
+        ),
     ] = None,
     protect: Annotated[
         Optional[bool],
         typer.Option(
             "--protect",
             "-p",
-            help="If `True`, all routes will be protected with user login.",
+            help="If 'True', all routes will be protected with user login.",
         ),
     ] = None,
 ):
+    from cloudisk.fs.commands import create_space
+
     typer.echo(HEADER_ART)
 
     prompt_name = "> Name of the space"
@@ -84,57 +84,62 @@ def create(
     create_space(name, protect)
 
 
-@app.command(help="Change the used space")
+@app.command(help=f"Changes the used space to one inside '{CLOUDISK_ROOT}'")
 def use(
     name: Annotated[
         str,
-        typer.Argument(help="Name of the instance."),
+        typer.Argument(help="Name of the space."),
     ],
 ):
+    from cloudisk.fs.commands import use_space
+
     use_space(name)
 
 
-@app.command(help="Lists all created spaces")
+@app.command(help=f"Lists all tracked spaces inside '{CLOUDISK_ROOT}'")
 def list():
+    from cloudisk.fs.commands import list_spaces
+
     list_spaces()
 
 
-@app.command(help=f"Creates a symlink (soft) inside '{CLOUDISK_ROOT}'")
+@app.command(help=f"Creates a (soft) symlink inside '{CLOUDISK_ROOT}'")
 def link(
     path: Annotated[
         Path,
-        typer.Argument(
-            help=(
-                "If path is a file, creates a symlink to that file. "
-                "If path is a dir, creates a symlink for each file/dir inside itself."
-            ),
-        ),
+        typer.Argument(help="File or directory to link."),
     ],
     recursive: Annotated[
         bool,
         typer.Option(
             "--recursive",
             "-r",
-            help="If specified and path is a directory, it's contents are linked.",
+            help="If path is a directory, the contents inside it are linked.",
         ),
     ] = False,
 ):
+    from cloudisk.fs.commands import link_path
+
     link_path(path, recursive)
 
 
-@app.command(help=f"Removes a symlink (soft) inside '{CLOUDISK_ROOT}'")
+@app.command(help=f"Removes a (soft) symlink inside '{CLOUDISK_ROOT}'")
 def unlink(
     path: Annotated[
         Path,
         typer.Argument(help="File or directory to unlink."),
     ],
 ):
+    from cloudisk.fs.commands import unlink_path
+
     unlink_path(path)
 
 
-@app.command(help="Runs the cloudisk server on 'host:port' (default: '0.0.0.0:8000')")
+@app.command(help="Runs the server on 'host:port' (default: '0.0.0.0:8000')")
 def run(
-    host: Annotated[str, typer.Option()] = "0.0.0.0",
-    port: Annotated[int, typer.Option()] = 8000,
+    host: Annotated[str, typer.Option(help="Host of the server")] = "0.0.0.0",
+    port: Annotated[int, typer.Option(help="Port of the server")] = 8000,
 ):
+    from cloudisk.http import server
+
     server.run(host=host, port=port)
