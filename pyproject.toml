@@ -55,6 +55,10 @@ build = [
     "build>=1.4.0",
 ]
 
+profile = [
+    "pyinstrument>=5.1.2",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
